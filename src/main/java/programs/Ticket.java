@@ -1,6 +1,7 @@
 package programs;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 public class Ticket {
@@ -90,4 +91,5 @@ public class Ticket {
     public int getNumber(){
         return Integer.parseInt(ticketinfo.get("number"));
     }
+
 }

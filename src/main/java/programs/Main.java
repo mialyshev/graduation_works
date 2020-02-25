@@ -13,6 +13,7 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Scanner;
 
 public class Main {
 
@@ -39,29 +40,81 @@ public class Main {
         String orig_url = args[0];
         String api_url = makeUrl(orig_url, false);
         String clone_url = makeUrl(orig_url, true);
+        int num = 0;
+        IssueManager issueManager = null;
+        BlameInspector blameInspector = null;
+
+        Scanner scanner = new Scanner(System.in);
+        boolean flag = false;
+
+        while(true){
+            if (flag){
+                break;
+            }
+            System.out.println("Enter a function by entering a number:\n" +
+                    "1 - Download all tickets\n" +
+                    "2 - Clone and show files\n" +
+                    "3 - Show tickets\n" +
+                    "-1 - Exit program");
+
+            num = scanner.nextInt();
+            switch (num){
+                case (1):
+                    issueManager = new IssueManager(api_url);
+                    System.out.println("All tickets download. Now you can view them");
+                    break;
+                case (2):
+                    blameInspector = new BlameInspector(clone_url);
+                    break;
+                case (3):
+                    if (issueManager == null){
+                        System.out.println("On first you need download tickets");
+                        break;
+                    }
+                    System.out.println("Ticket numbers:");
+                    issueManager.outNumbers();
+                    System.out.println("Enter ticket number:");
+                    num = scanner.nextInt();
+                    while(!issueManager.checkNumber(num)){
+                        System.out.println("Wrong number, enter new:");
+                        num = scanner.nextInt();
+                    }
+                    issueManager.getTicket(num).outTicketInfo();
+                    break;
+                case (-1):
+                    flag = true;
+                    break;
+                default:
+                    System.out.println("You enter wrong number. Thy again");
+
+            }
 
 
-        //BlameInspector blameInspector = new BlameInspector(clone_url);
+
+
+        }
+
+
        // blameInspector.blame("RegistrationController.java");
 
-        IssueManager issueManager = new IssueManager(api_url);
-
-        issueManager.outNumbers();
-
-        Ticket ticket = null;
-
-        try {
-            ticket = issueManager.getTicket(12);
-        }catch (NullPointerException ex){
-            System.out.println(ex.getMessage());
-        }
-
-        try {
-            ticket = issueManager.getTicket(5);
-        }catch (NullPointerException ex){
-            System.out.println(ex.getMessage());
-        }
-
-        ticket.outTicketInfo();
+//        IssueManager issueManager = new IssueManager(api_url);
+//
+//        issueManager.outNumbers();
+//
+//        Ticket ticket = null;
+//
+//        try {
+//            ticket = issueManager.getTicket(12);
+//        }catch (NullPointerException ex){
+//            System.out.println(ex.getMessage());
+//        }
+//
+//        try {
+//            ticket = issueManager.getTicket(5);
+//        }catch (NullPointerException ex){
+//            System.out.println(ex.getMessage());
+//        }
+//
+//        ticket.outTicketInfo();
     }
 }

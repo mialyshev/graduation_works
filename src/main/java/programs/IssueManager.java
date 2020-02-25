@@ -227,15 +227,25 @@ public class IssueManager {
         throw new NullPointerException("You entered an invalid number");
     }
 
-
     public ArrayList<Integer> getNumbers(){
         return numbers;
     }
 
     public void outNumbers(){
         Iterator<Integer> iterator = numbers.iterator();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             System.out.println(iterator.next());
         }
+
+    }
+
+    public boolean checkNumber(int num){
+        Iterator<Integer>iterator = numbers.iterator();
+        while (iterator.hasNext()){
+            if (iterator.next().equals(num)){
+                return true;
+            }
+        }
+        return false;
     }
 }
