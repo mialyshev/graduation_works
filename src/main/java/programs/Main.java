@@ -89,32 +89,7 @@ public class Main {
 
             }
 
-
-
-
         }
 
-
-       // blameInspector.blame("RegistrationController.java");
-
-//        IssueManager issueManager = new IssueManager(api_url);
-//
-//        issueManager.outNumbers();
-//
-//        Ticket ticket = null;
-//
-//        try {
-//            ticket = issueManager.getTicket(12);
-//        }catch (NullPointerException ex){
-//            System.out.println(ex.getMessage());
-//        }
-//
-//        try {
-//            ticket = issueManager.getTicket(5);
-//        }catch (NullPointerException ex){
-//            System.out.println(ex.getMessage());
-//        }
-//
-//        ticket.outTicketInfo();
     }
 }
