@@ -26,4 +26,9 @@ public class StackFrame {
     public String getFileName() {
         return fileName;
     }
+
+    public String toString(){
+
+        return "FileName: " + fileName + "\nFunctionName: " + functionName + "\nString with bug: " + cur_string;
+    }
 }

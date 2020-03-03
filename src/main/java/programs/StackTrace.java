@@ -11,6 +11,7 @@ public class StackTrace {
         ArrayList<String> lineStack = getLines(stack);
         for(String str : lineStack){
             stackFrames.add(new StackFrame(str, blameInspector));
+            System.out.println("StackFrame №" + stackFrames.size() + '\n' + stackFrames.get(stackFrames.size() - 1).toString() + '\n');
         }
     }
 

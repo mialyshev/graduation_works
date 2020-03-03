@@ -1,9 +1,7 @@
 package programs;
 
 import org.eclipse.jgit.api.errors.GitAPIException;
-
 import java.io.IOException;
-
 import java.util.Scanner;
 
 public class Main {
@@ -65,10 +63,6 @@ public class Main {
                     blameInspector = new BlameInspector(clone_url);
                     break;
                 case (3):
-                    if (issueManager == null){
-                        System.out.println("On first you need download tickets");
-                        break;
-                    }
                     System.out.println("Ticket numbers:");
                     issueManager.outNumbers();
                     System.out.println("Enter ticket number:");
