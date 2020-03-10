@@ -2,18 +2,35 @@ package programs;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.blame.BlameResult;
+import org.eclipse.jgit.diff.RawText;
+import org.eclipse.jgit.diff.RawTextComparator;
+import org.eclipse.jgit.lib.PersonIdent;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 
 import java.io.*;
+import java.text.SimpleDateFormat;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class BlameInspector {
     String url;
     String path;
+    Map<String,String>fileInfo;
 
     public BlameInspector(String url) throws IOException,
             InterruptedException {
         this.url = url;
+        fileInfo = new HashMap<>();
         path = "./" + getName(url);
+        File Folder = new File(this.path);
+        if (Folder.listFiles() != null){
+            viewFolderFiles(this.path, 0);
+            return;
+        }
         try {
             cloneRepo(url);
         }catch (GitAPIException ex){
@@ -29,7 +46,10 @@ public class BlameInspector {
             str.append(url.charAt(i));
             i--;
         }
-        return str.reverse().toString();
+        str = str.reverse();
+        String string = str.toString();
+
+        return string.replaceAll(".git", "");
     }
 
     private void cloneRepo(String url)throws GitAPIException {
@@ -42,7 +62,36 @@ public class BlameInspector {
     }
 
     public void blame(String filename) throws IOException, InterruptedException, GitAPIException {
+        String cur_path = fileInfo.get(filename);
+        StringBuilder str = new StringBuilder();
+        int k = cur_path.length() - 1;
+        while(cur_path.charAt(k) != '/'){
+            k--;
+        }
+        int j = 0;
+        while (j != k){
+            str.append(cur_path.charAt(j));
+            j++;
+        }
+        FileRepositoryBuilder builder = new FileRepositoryBuilder();
+        Repository repo = builder
+                .findGitDir(new File(this.path))
+                .readEnvironment()
+                .build();
 
+        SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("YYYY-MM-dd HH:mm");
+
+        final BlameResult result = new Git(repo).blame().setFilePath("MainController.java")
+                .setTextComparator(RawTextComparator.WS_IGNORE_ALL).call();
+        final RawText rawText = result.getResultContents();
+        for (int i = 0; i < rawText.size(); i++) {
+            final PersonIdent sourceAuthor = result.getSourceAuthor(i);
+            final RevCommit sourceCommit = result.getSourceCommit(i);
+            System.out.println(sourceAuthor.getName() +
+                    (sourceCommit != null ? " - " + DATE_FORMAT.format(((long)sourceCommit.getCommitTime())*1000) +
+                            " - " + sourceCommit.getName() : "") +
+                    ": " + rawText.getString(i));
+        }
     }
 
     private void viewFolderFiles(String path, int inc) throws IOException, InterruptedException {
@@ -58,6 +107,7 @@ public class BlameInspector {
             }
             else {
                 System.out.println(file.getName());
+                fileInfo.put(file.getName(), file.getAbsolutePath());
             }
         }
     }
@@ -90,9 +140,14 @@ public class BlameInspector {
             start--;
         }
         stackFrame.setFunctionName(stringBuilder.reverse().toString());
+        String path = "";
 
-        String path = getPath(stackFrame.getFileName(), this.path);
-
+        if(fileInfo.containsKey(stackFrame.getFileName())){
+            path = fileInfo.get(stackFrame.getFileName());
+        }
+        else {
+            return;
+        }
         if (!path.isEmpty()) {
             int cur_line = 1;
             try {
@@ -117,7 +172,7 @@ public class BlameInspector {
 
     }
 
-    public String getPath(String fileName, String curPath) throws IOException{
+    public String getFilePath(String fileName, String curPath) throws IOException{
         File Folder = new File(curPath);
         for (File file : Folder.listFiles())
         {
@@ -125,7 +180,7 @@ public class BlameInspector {
                 return file.getAbsolutePath();
             }
             if (file.isDirectory()){
-                String path = getPath(fileName, file.getAbsolutePath());
+                String path = getFilePath(fileName, file.getAbsolutePath());
                 if (path != null){
                     return path;
                 }

@@ -8,15 +8,12 @@ public class StackTrace {
 
     public StackTrace(String stack, BlameInspector blameInspector) throws IOException, InterruptedException {
         stackFrames = new ArrayList<>();
-        ArrayList<String> lineStack = getLines(stack);
-        for(String str : lineStack){
-            stackFrames.add(new StackFrame(str, blameInspector));
-        }
+        getLines(stack, blameInspector);
     }
 
-    public ArrayList<String> getLines(String str){
+    public void getLines(String str, BlameInspector blameInspector) throws IOException, InterruptedException {
         int i = str.indexOf("at");
-        ArrayList<String>arrayList = new ArrayList<>();
+
         while(i != -1) {
             StringBuilder stringBuilder = new StringBuilder();
             while (str.charAt(i) != '\n') {
@@ -26,9 +23,15 @@ public class StackTrace {
                     break;
                 }
             }
-            arrayList.add(stringBuilder.toString());
+            StackFrame stackFrame = new StackFrame(stringBuilder.toString(), blameInspector);
+            if (stackFrame.getCur_string() != null) {
+                stackFrames.add(stackFrame);
+            }
             i = str.indexOf("at", i);
         }
-        return arrayList;
+    }
+
+    public StackFrame getFrame(int num){
+        return stackFrames.get(num);
     }
 }

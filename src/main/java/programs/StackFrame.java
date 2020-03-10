@@ -26,4 +26,15 @@ public class StackFrame {
     public String getFileName() {
         return fileName;
     }
+
+    public String getCur_string() {
+        if (cur_string == null){
+            return null;
+        }
+        return cur_string;
+    }
+
+    public String getFunctionName() {
+        return functionName;
+    }
 }
