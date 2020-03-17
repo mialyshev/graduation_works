@@ -1,14 +1,15 @@
-package programs;
+package org.suai.blamer;
+
+import org.suai.blamer.git.BlameInspector;
 
 import java.io.IOException;
 import java.util.ArrayList;
 
 public class StackTrace {
-    ArrayList<StackFrame> stackFrames;
+    private ArrayList<StackFrame> stackFrames;
 
-    public StackTrace(String stack, BlameInspector blameInspector) throws IOException, InterruptedException {
+    public StackTrace(){
         stackFrames = new ArrayList<>();
-        getLines(stack, blameInspector);
     }
 
     public void getLines(String str, BlameInspector blameInspector) throws IOException, InterruptedException {
@@ -23,8 +24,9 @@ public class StackTrace {
                     break;
                 }
             }
-            StackFrame stackFrame = new StackFrame(stringBuilder.toString(), blameInspector);
-            if (stackFrame.getCur_string() != null) {
+            StackFrame stackFrame = new StackFrame();
+            stackFrame.getStackInfo(stringBuilder.toString(), blameInspector);
+            if (stackFrame.getCurString() != null) {
                 stackFrames.add(stackFrame);
             }
             i = str.indexOf("at", i);

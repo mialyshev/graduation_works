@@ -1,36 +1,30 @@
-package programs;
+package org.suai.blamer;
 
-import org.eclipse.jgit.api.errors.GitAPIException;
+import org.suai.blamer.git.BlameInspector;
+import org.suai.blamer.git.GitException;
+import org.suai.blamer.issueTracker.GitIssueManager;
+import org.suai.blamer.issueTracker.IssueTrackerException;
+
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Properties;
 import java.util.Scanner;
 
-public class Main {
+public class Main{
 
-    private static String makeUrl(String url, Boolean clone){
-        StringBuilder cur_url = new StringBuilder();
-        if (clone){
-            cur_url.append(url + ".git");
-            return cur_url.toString();
+    public static void main(String[] args) throws IOException, InterruptedException, IssueTrackerException {
+        Properties properties = new Properties();
+        try {
+            FileInputStream fis = new FileInputStream("src/main/resources/config.properties");
+            properties.load(fis);
+        } catch (IOException e) {
+            e.getMessage();
         }
-        cur_url.append("https://api.github.com/repos/");
-        int info_index = url.indexOf("github.com");
-        int fromindex = info_index + 1;
-        info_index = url.indexOf('/', fromindex) + 1;
-        while (info_index != url.length()){
-            cur_url.append(url.charAt(info_index));
-            info_index++;
-        }
-        cur_url.append("/issues");
-        return cur_url.toString();
-    }
 
-
-    public static void main(String[] args) throws GitAPIException, IOException, InterruptedException {
-        String orig_url = args[0];
-        String api_url = makeUrl(orig_url, false);
-        String clone_url = makeUrl(orig_url, true);
+        String url = properties.getProperty("url");
+        String path = properties.getProperty("path");
         int num = 0;
-        IssueManager issueManager = null;
+        GitIssueManager issueManager = null;
         BlameInspector blameInspector = null;
         StackTrace stackTrace = null;
 
@@ -57,7 +51,7 @@ public class Main {
             }
             System.out.println("Enter a function by entering a number:\n" +
                     "1 - Download all tickets\n" +
-                    "2 - Clone and show files\n" +
+                    "2 - Load and show files\n" +
                     "3 - Show tickets\n" +
                     "4 - StackTrace analyze\n" +
                     "5 - blame file\n" +
@@ -66,12 +60,21 @@ public class Main {
             num = scanner.nextInt();
             switch (num){
                 case (1):
-                    issueManager = new IssueManager(api_url);
+                    issueManager = new GitIssueManager(url);
+                    try {
+                        issueManager.parse();
+                    }catch (IssueTrackerException ex){
+                        ex.printStackTrace();
+                    }
+
                     System.out.println("All tickets download. Now you can view them");
                     break;
                 case (2):
-                    blameInspector = new BlameInspector(clone_url);
+                    blameInspector = new BlameInspector(path);
+                    blameInspector.loadFolderInfo(path);
+                    blameInspector.viewFolderFiles(path, 0);
                     break;
+
                 case (3):
                     System.out.println("Ticket numbers:");
                     issueManager.outNumbers();
@@ -80,12 +83,17 @@ public class Main {
                     System.out.println(issueManager.getTicket(num));
                     break;
                 case (4):
-                    stackTrace = new StackTrace(tmp_stack, blameInspector);
+                    stackTrace = new StackTrace();
+                    stackTrace.getLines(tmp_stack, blameInspector);
                     System.out.println("The name of the function that threw the exception : " + stackTrace.getFrame(0).getFunctionName());
                     break;
                 case (5):
                     String filename = "MvcConfig.java";
-                    blameInspector.blame(filename);
+                    try {
+                        blameInspector.blame(filename);
+                    }catch (GitException ex){
+                        ex.printStackTrace();
+                    }
                 case (-1):
                     flag = true;
                     break;

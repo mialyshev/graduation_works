@@ -1,4 +1,4 @@
-package programs;
+package org.suai.blamer;
 
 import static org.junit.Assert.assertTrue;
 

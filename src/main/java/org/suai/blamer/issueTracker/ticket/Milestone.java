@@ -1,7 +1,6 @@
-package programs.ticket;
+package org.suai.blamer.issueTracker.ticket;
 
 import java.lang.reflect.Field;
-import java.util.List;
 
 public class Milestone {
     public String url;

@@ -1,4 +1,4 @@
-package programs.ticket;
+package org.suai.blamer.issueTracker.ticket;
 
 import java.lang.reflect.Field;
 
