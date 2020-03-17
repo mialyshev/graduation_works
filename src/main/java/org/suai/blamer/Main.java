@@ -8,11 +8,19 @@ import org.suai.blamer.issueTracker.IssueTrackerException;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
-import java.util.Scanner;
 
 public class Main{
 
     public static void main(String[] args) throws IOException, InterruptedException, IssueTrackerException {
+
+        int ticket_num = -1;
+        try {
+            if(!args[0].isEmpty()){
+                ticket_num = Integer.parseInt(args[0]);
+            }
+        }catch (ArrayIndexOutOfBoundsException e){
+            e.printStackTrace();
+        }
         Properties properties = new Properties();
         try {
             FileInputStream fis = new FileInputStream("src/main/resources/config.properties");
@@ -23,13 +31,18 @@ public class Main{
 
         String url = properties.getProperty("url");
         String path = properties.getProperty("path");
-        int num = 0;
-        GitIssueManager issueManager = null;
-        BlameInspector blameInspector = null;
-        StackTrace stackTrace = null;
+        GitIssueManager issueManager = new GitIssueManager(url);
+        try {
+            issueManager.parse();
+        }catch (IssueTrackerException ex){
+            ex.printStackTrace();
+        }
+        if (ticket_num != -1) {
+            System.out.println(issueManager.getTicket(ticket_num));
+        }
 
-        Scanner scanner = new Scanner(System.in);
-        boolean flag = false;
+        BlameInspector blameInspector = new BlameInspector(path);
+        blameInspector.loadFolderInfo(path);
 
         String tmp_stack = "javax.servlet.ServletException: Произошло что–то ужасное\n" +
                 "   at java.lang.reflect.WeakCache$Factory.get(WeakCache.java:230)\n" +
@@ -45,61 +58,8 @@ public class Main{
                 "   at org.mortbay.jetty.servlet.ArticleController.editArticle(ArticleController.java:138)\n" +
                 "   at com.example.myproject.UserController.userSave(UserController.java:57)";
 
-        while(true){
-            if (flag){
-                break;
-            }
-            System.out.println("Enter a function by entering a number:\n" +
-                    "1 - Download all tickets\n" +
-                    "2 - Load and show files\n" +
-                    "3 - Show tickets\n" +
-                    "4 - StackTrace analyze\n" +
-                    "5 - blame file\n" +
-                    "-1 - Exit program");
-
-            num = scanner.nextInt();
-            switch (num){
-                case (1):
-                    issueManager = new GitIssueManager(url);
-                    try {
-                        issueManager.parse();
-                    }catch (IssueTrackerException ex){
-                        ex.printStackTrace();
-                    }
-
-                    System.out.println("All tickets download. Now you can view them");
-                    break;
-                case (2):
-                    blameInspector = new BlameInspector(path);
-                    blameInspector.loadFolderInfo(path);
-                    blameInspector.viewFolderFiles(path, 0);
-                    break;
-
-                case (3):
-                    System.out.println("Ticket numbers:");
-                    issueManager.outNumbers();
-                    System.out.println("Enter ticket number:");
-                    num = scanner.nextInt();
-                    System.out.println(issueManager.getTicket(num));
-                    break;
-                case (4):
-                    stackTrace = new StackTrace();
-                    stackTrace.getLines(tmp_stack, blameInspector);
-                    System.out.println("The name of the function that threw the exception : " + stackTrace.getFrame(0).getFunctionName());
-                    break;
-                case (5):
-                    String filename = "MvcConfig.java";
-                    try {
-                        blameInspector.blame(filename);
-                    }catch (GitException ex){
-                        ex.printStackTrace();
-                    }
-                case (-1):
-                    flag = true;
-                    break;
-                default:
-                    System.out.println("You enter wrong number. Thy again");
-            }
-        }
+        StackTrace stackTrace =  new StackTrace();
+        stackTrace.getLines(tmp_stack, blameInspector);
+        System.out.println("The name of the function that threw the exception : " + stackTrace.getFrame(0).getFunctionName());
     }
 }

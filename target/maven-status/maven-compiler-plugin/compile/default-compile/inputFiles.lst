@@ -8,7 +8,7 @@
 /home/mialyshev/IdeaProjects/graduation_works/src/main/java/org/suai/blamer/issueTracker/ticket/Ticket.java
 /home/mialyshev/IdeaProjects/graduation_works/src/main/java/org/suai/blamer/git/GitException.java
 /home/mialyshev/IdeaProjects/graduation_works/src/main/java/org/suai/blamer/issueTracker/ticket/User.java
-/home/mialyshev/IdeaProjects/graduation_works/src/main/java/org/suai/blamer/issueTracker/IssueManager.java
 /home/mialyshev/IdeaProjects/graduation_works/src/main/java/org/suai/blamer/issueTracker/ticket/Milestone.java
 /home/mialyshev/IdeaProjects/graduation_works/src/main/java/org/suai/blamer/StackFrame.java
 /home/mialyshev/IdeaProjects/graduation_works/src/main/java/org/suai/blamer/issueTracker/IssueTrackerException.java
+/home/mialyshev/IdeaProjects/graduation_works/src/main/java/org/suai/blamer/issueTracker/GitIssueManager.java

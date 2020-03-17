@@ -25,12 +25,12 @@ public class GitIssueManager implements IIssueTracker{
 
     public void parse() throws IssueTrackerException{
         try{
-            HttpURLConnection httpcon = (HttpURLConnection) new URL(url).openConnection();
+            String apiUrl = getApiUrl();
+            HttpURLConnection httpcon = (HttpURLConnection) new URL(apiUrl).openConnection();
             BufferedReader in = new BufferedReader(new InputStreamReader(httpcon.getInputStream()));
             String issue = in.readLine();
             int fromindex = 0;
             int i = 0;
-            String apiUrl = getApiUrl();
             while (i != -1){
                 StringBuilder numberTicket = new StringBuilder();
                 i = issue.indexOf("number", fromindex);

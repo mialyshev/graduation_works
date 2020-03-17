@@ -1,7 +1,5 @@
-1)git clone this repository  
-2)from the folder to which you copied:  
-2.1 mvn compile  
-2.2 mvn exec:java -Dexec.mainClass=org.suai.blamer.Main -Dexec.args="type here your repository link"  
-
-for example:  
-mvn exec:java -Dexec.mainClass=org.suai.blamer.Main -Dexec.args="https://github.com/Maratjimbo/webservice"
+1)git clone your repository  
+2)configure config.properties in blamer.jar  
+3)java -jar blamer.jar "ticket number"  
+    for example   
+    java -jar blamer 1
