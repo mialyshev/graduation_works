@@ -3,6 +3,8 @@
 /home/mialyshev/IdeaProjects/graduation_works/src/main/java/org/suai/blamer/issueTracker/IIssueTracker.java
 /home/mialyshev/IdeaProjects/graduation_works/src/main/java/org/suai/blamer/issueTracker/ticket/Permissions.java
 /home/mialyshev/IdeaProjects/graduation_works/src/main/java/org/suai/blamer/git/BlameInspector.java
+/home/mialyshev/IdeaProjects/graduation_works/src/main/java/org/suai/blamer/output/Screen.java
+/home/mialyshev/IdeaProjects/graduation_works/src/main/java/org/suai/blamer/output/HTMLPage.java
 /home/mialyshev/IdeaProjects/graduation_works/src/main/java/org/suai/blamer/StackTrace.java
 /home/mialyshev/IdeaProjects/graduation_works/src/main/java/org/suai/blamer/issueTracker/ticket/PullRequest.java
 /home/mialyshev/IdeaProjects/graduation_works/src/main/java/org/suai/blamer/issueTracker/ticket/Ticket.java

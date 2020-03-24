@@ -4,6 +4,7 @@ org/suai/blamer/git/GitException.class
 org/suai/blamer/Main.class
 org/suai/blamer/issueTracker/ticket/Labels.class
 org/suai/blamer/issueTracker/ticket/Ticket.class
+org/suai/blamer/output/Screen.class
 org/suai/blamer/issueTracker/ticket/Milestone.class
 org/suai/blamer/issueTracker/ticket/User.class
 org/suai/blamer/StackTrace.class
@@ -11,4 +12,5 @@ org/suai/blamer/git/BlameInspector.class
 org/suai/blamer/issueTracker/ticket/PullRequest.class
 org/suai/blamer/StackFrame.class
 org/suai/blamer/issueTracker/IssueTrackerException.class
+org/suai/blamer/output/HTMLPage.class
 org/suai/blamer/issueTracker/ticket/Permissions.class

@@ -1,65 +1,64 @@
 package org.suai.blamer;
 
 import org.suai.blamer.git.BlameInspector;
-import org.suai.blamer.git.GitException;
 import org.suai.blamer.issueTracker.GitIssueManager;
 import org.suai.blamer.issueTracker.IssueTrackerException;
+import org.suai.blamer.output.HTMLPage;
+import org.suai.blamer.output.Screen;
 
-import java.io.FileInputStream;
 import java.io.IOException;
+
+import java.io.InputStream;
 import java.util.Properties;
 
 public class Main{
+    public static void main(String[] args) throws IOException, IssueTrackerException {
 
-    public static void main(String[] args) throws IOException, InterruptedException, IssueTrackerException {
-
-        int ticket_num = -1;
+        int startTicketNum = -1;
+        int endTicketNum = -1;
+        String out = null;
         try {
-            if(!args[0].isEmpty()){
-                ticket_num = Integer.parseInt(args[0]);
+            if(args[0] != null){
+                startTicketNum = Integer.parseInt(args[0]);
+            }
+            if(args[1] != null ){
+                endTicketNum = Integer.parseInt(args[1]);
+            }
+            if(args[2] != null){
+                out = args[2];
             }
         }catch (ArrayIndexOutOfBoundsException e){
             e.printStackTrace();
         }
         Properties properties = new Properties();
         try {
-            FileInputStream fis = new FileInputStream("src/main/resources/config.properties");
-            properties.load(fis);
+            InputStream input = Main.class.getClassLoader().getResourceAsStream("config.properties");
+            properties.load(input);
         } catch (IOException e) {
             e.getMessage();
         }
 
         String url = properties.getProperty("url");
         String path = properties.getProperty("path");
-        GitIssueManager issueManager = new GitIssueManager(url);
+
+        System.out.println("url: " + url + "\npath: " + path);
+        GitIssueManager gitIssueManager = new GitIssueManager(url);
         try {
-            issueManager.parse();
+            gitIssueManager.parse(startTicketNum, endTicketNum);
         }catch (IssueTrackerException ex){
             ex.printStackTrace();
         }
-        if (ticket_num != -1) {
-            System.out.println(issueManager.getTicket(ticket_num));
+
+        if (out.equals("screen")){
+            Screen screen = new Screen(gitIssueManager.getTicketpack());
+            screen.out(gitIssueManager);
+        }
+        if(out.equals("html")){
+            HTMLPage htmlPage = new HTMLPage(gitIssueManager.getTicketpack());
+            htmlPage.makePage(gitIssueManager);
         }
 
         BlameInspector blameInspector = new BlameInspector(path);
         blameInspector.loadFolderInfo(path);
-
-        String tmp_stack = "javax.servlet.ServletException: Произошло что–то ужасное\n" +
-                "   at java.lang.reflect.WeakCache$Factory.get(WeakCache.java:230)\n" +
-                "   at java.lang.reflect.WeakCache.get(WeakCache.java:127)\n" +
-                "   at java.lang.reflect.Proxy.getProxyClass0(Proxy.java:419)\n" +
-                "   at java.lang.reflect.Proxy.getProxyClass(Proxy.java:371)\n" +
-                "   at com.example.myproject.Article.findWord(Article.java:88)\n" +
-                "   at com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory$Builder.as(PipelineOptionsFactory.java:284)\n" +
-                "   at datasplash.core$make_pipeline.invoke(core.clj:661)\n" +
-                "   at gcptest2.core$get_word_count_pipeline.invoke(core.clj:39)\n" +
-                "   at gcptest2.core$run_dataflow_job.invoke(core.clj:72)\n" +
-                "   at com.alex4321.botweb.Application.main(Application.java:23)\n" +
-                "   at org.mortbay.jetty.servlet.ArticleController.editArticle(ArticleController.java:138)\n" +
-                "   at com.example.myproject.UserController.userSave(UserController.java:57)";
-
-        StackTrace stackTrace =  new StackTrace();
-        stackTrace.getLines(tmp_stack, blameInspector);
-        System.out.println("The name of the function that threw the exception : " + stackTrace.getFrame(0).getFunctionName());
     }
 }

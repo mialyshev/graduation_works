@@ -12,6 +12,11 @@ public class Ticket {
     public String html_url;
     public String id;
     public String node_id;
+
+    public String getNumber() {
+        return number;
+    }
+
     public String number;
     public String title;
     public User user;
@@ -48,6 +53,10 @@ public class Ticket {
 
     public void setAssignee(User user){
         assignee = user;
+    }
+
+    public String getBody() {
+        return body;
     }
 }
 

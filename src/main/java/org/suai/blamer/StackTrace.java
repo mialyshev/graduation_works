@@ -12,7 +12,7 @@ public class StackTrace {
         stackFrames = new ArrayList<>();
     }
 
-    public void getLines(String str, BlameInspector blameInspector) throws IOException, InterruptedException {
+    public void getLines(String str, BlameInspector blameInspector) throws IOException{
         int i = str.indexOf("at");
 
         while(i != -1) {
