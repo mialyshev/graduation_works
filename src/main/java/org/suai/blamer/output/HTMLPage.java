@@ -8,26 +8,25 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Map;
 
 public class HTMLPage {
-    ArrayList<Ticket> ticketArrayList;
+    Map<Ticket, String> ticketStringMap;
 
-    public HTMLPage(ArrayList<Ticket> tickets){
-        ticketArrayList = tickets;
+    public HTMLPage(Map<Ticket, String> whoIs){
+        ticketStringMap = whoIs;
     }
 
 
-    public void makePage(GitIssueManager gitIssueManager) throws IOException, IssueTrackerException {
+
+    public void out() throws IOException, IssueTrackerException{
         FileWriter writer = new FileWriter("./output.html", false);
         writer.append("<html>");
         writer.append("<head>BlameInspector</head>");
         writer.append("<body>");
-        Iterator<Ticket>ticketIterator = ticketArrayList.iterator();
-        while (ticketIterator.hasNext()){
-            Ticket ticket = ticketIterator.next();
-            writer.append("<h3>Ticket № " + ticket.getNumber() + "</h3>");
-            writer.append("<p>StackTrace on message<br>" + gitIssueManager.getStacktrace(ticket.getBody(), false) + "</p>");
-            writer.append("<p>StackTrace on attach:<br>" + gitIssueManager.getStacktrace(gitIssueManager.isAttach(ticket.getBody()), false) + "</p>");
+        for (Map.Entry<Ticket, String> pair : ticketStringMap.entrySet()) {
+            writer.append("<h3>Ticket № " + pair.getKey().getNumber() + "</h3>");
+            writer.append("<p>Assignee to " + pair.getValue() + "</p><br>");
         }
         writer.append("</body>");
         writer.append("</html>");

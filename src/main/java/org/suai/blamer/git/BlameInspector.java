@@ -1,19 +1,13 @@
 package org.suai.blamer.git;
 
 
+import org.eclipse.jgit.api.BlameCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.blame.BlameResult;
-import org.eclipse.jgit.diff.RawText;
-import org.eclipse.jgit.diff.RawTextComparator;
-import org.eclipse.jgit.internal.storage.file.FileRepository;
-import org.eclipse.jgit.lib.PersonIdent;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+import org.eclipse.jgit.lib.ObjectId;
 
 import java.io.*;
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,63 +22,45 @@ public class BlameInspector {
     }
 
 
-    public void blame(String filename) throws GitException {
-        String curPath = fileInfo.get(filename);
-        StringBuilder str = new StringBuilder();
-        int k = curPath.length() - 1;
-        while(curPath.charAt(k) != '/'){
-            k--;
-        }
-        int j = 0;
-        while (j != k){
-            str.append(curPath.charAt(j));
-            j++;
-        }
-
-        Repository repo = null;
-        try {
-            repo = new FileRepositoryBuilder()
-                    .findGitDir(new File(this.path))
-                    .readEnvironment()
-                    .setWorkTree(new File(str.toString()))
-                    .build();
+    public String blame(String filename, int stringNum) throws GitException, IOException {
+        Git git;
+        ObjectId commitID;
+        try{
+            git = Git.open(new File(this.path + "/.git"));
+            commitID = git.getRepository().resolve("HEAD");
         }catch (IOException ex){
             throw new GitException(ex);
         }
-
-
-        SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("YYYY-MM-dd HH:mm");
-        String [] strings = repo.getWorkTree().list();
-
-
-        BlameResult result = null;
+        BlameCommand cmd = new BlameCommand(git.getRepository());
+        cmd.setStartCommit(commitID);
+        cmd.setFilePath(getFilePathInRepo(filename));
+        BlameResult blameResult;
         try {
-            result = new Git(repo).blame().setFilePath(filename)
-                    .setTextComparator(RawTextComparator.WS_IGNORE_ALL).call();
+            blameResult = cmd.call();
         }catch (GitAPIException ex){
             throw new GitException(ex);
         }
 
-        RawText rawText = result.getResultContents();
-        for (int i = 0; i < rawText.size(); i++) {
-            final PersonIdent sourceAuthor = result.getSourceAuthor(i);
-            final RevCommit sourceCommit = result.getSourceCommit(i);
-            System.out.println(sourceAuthor.getName() +
-                    (sourceCommit != null ? " - " + DATE_FORMAT.format(((long)sourceCommit.getCommitTime())*1000) +
-                            " - " + sourceCommit.getName() : "") +
-                    ": " + rawText.getString(i));
-        }
+        String blamedUserName = blameResult.getSourceAuthor(stringNum).getName();
+        return blamedUserName;
+
     }
 
-    public void loadFolderInfo(String path){
-        File folder = new File(path);
+    public void loadFolderInfo(String absPath, String repoPath){
+        File folder = new File(absPath);
         for (File file : folder.listFiles())
         {
+            String curPath = "";
+            if (repoPath == ""){
+                curPath = file.getName();
+            }else {
+                curPath = repoPath + "/" + file.getName();
+            }
             if (file.isDirectory()){
-                loadFolderInfo(file.getAbsolutePath());
+                loadFolderInfo(file.getAbsolutePath(), curPath);
             }
             else {
-                fileInfo.put(file.getName(), file.getAbsolutePath());
+                fileInfo.put(file.getName(), curPath);
             }
         }
     }
@@ -106,31 +82,18 @@ public class BlameInspector {
         }
     }
 
-    public String getPath() {
-        return path;
-    }
 
-
-    public String getFilePath(String fileName, String curPath){
-        File Folder = new File(curPath);
-        for (File file : Folder.listFiles())
-        {
-            if(file.getName().equals(fileName)){
-                return file.getAbsolutePath();
-            }
-            if (file.isDirectory()){
-                String path = getFilePath(fileName, file.getAbsolutePath());
-                if (path != null){
-                    return path;
-                }
-            }
+    public String getFilePathInRepo(String fileName){
+        if (fileInfo.containsKey(fileName)){
+            return fileInfo.get(fileName);
         }
         return null;
     }
 
+
     public String getFilePath(String fileName){
         if (fileInfo.containsKey(fileName)){
-            return fileInfo.get(fileName);
+            return this.path + "/" + fileInfo.get(fileName);
         }
         return null;
     }

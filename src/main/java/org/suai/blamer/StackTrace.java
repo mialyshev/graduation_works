@@ -34,6 +34,9 @@ public class StackTrace {
     }
 
     public StackFrame getFrame(int num){
-        return stackFrames.get(num);
+        if (stackFrames.size() != 0 & stackFrames.size() > num){
+            return stackFrames.get(num);
+        }
+        return null;
     }
 }

@@ -10,6 +10,7 @@ public class StackFrame {
     private String functionName = null;
     private String fileName = null;
     private String curString = null;
+    private int numString;
 
     public StackFrame(){
     }
@@ -34,7 +35,6 @@ public class StackFrame {
             this.fileName = stringBuilder.toString();
         }
 
-        int numString = 0;
         if (!uknown) {
             i++;
             stringBuilder = new StringBuilder();
@@ -83,7 +83,15 @@ public class StackFrame {
         return curString;
     }
 
-    public String getFunctionName() {
-        return functionName;
+
+    public int getNumString() {
+        return numString;
     }
+
+
+    public String getFileName() {
+        return fileName;
+    }
+
+
 }

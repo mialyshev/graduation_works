@@ -12,7 +12,7 @@ import java.io.InputStream;
 import java.util.Properties;
 
 public class Main{
-    public static void main(String[] args) throws IOException, IssueTrackerException {
+    public static void main(String[] args) throws Exception {
 
         int startTicketNum = -1;
         int endTicketNum = -1;
@@ -41,7 +41,6 @@ public class Main{
         String url = properties.getProperty("url");
         String path = properties.getProperty("path");
 
-        System.out.println("url: " + url + "\npath: " + path);
         GitIssueManager gitIssueManager = new GitIssueManager(url);
         try {
             gitIssueManager.parse(startTicketNum, endTicketNum);
@@ -49,16 +48,19 @@ public class Main{
             ex.printStackTrace();
         }
 
-        if (out.equals("screen")){
-            Screen screen = new Screen(gitIssueManager.getTicketpack());
-            screen.out(gitIssueManager);
-        }
-        if(out.equals("html")){
-            HTMLPage htmlPage = new HTMLPage(gitIssueManager.getTicketpack());
-            htmlPage.makePage(gitIssueManager);
-        }
 
         BlameInspector blameInspector = new BlameInspector(path);
-        blameInspector.loadFolderInfo(path);
+        blameInspector.loadFolderInfo(path, "");
+
+        gitIssueManager.findAssignee(blameInspector);
+
+        if (out.equals("screen")){
+            Screen screen = new Screen(gitIssueManager.getWhoAssignee());
+            screen.out();
+        }
+        if(out.equals("html")){
+            HTMLPage htmlPage = new HTMLPage(gitIssueManager.getWhoAssignee());
+            htmlPage.out();
+        }
     }
 }

@@ -1,6 +1,8 @@
 package org.suai.blamer.issueTracker;
 
 import com.google.gson.Gson;
+import org.suai.blamer.StackTrace;
+import org.suai.blamer.git.BlameInspector;
 import org.suai.blamer.git.GitException;
 import org.suai.blamer.issueTracker.ticket.Ticket;
 
@@ -17,12 +19,15 @@ public class GitIssueManager implements IIssueTracker{
     private ArrayList<String> сollaborators;
     private ArrayList<Integer> numbers;
     private String url;
+    private Map<Ticket, String>whoAssignee;
+
 
     public GitIssueManager(String url) throws IOException {
         ticketpack = new ArrayList<>();
         сollaborators = new ArrayList<>();
         numbers = new ArrayList<>();
         this.url = url;
+        whoAssignee = new HashMap<>();
     }
 
     public void parse(int start, int end) throws IssueTrackerException{
@@ -30,7 +35,7 @@ public class GitIssueManager implements IIssueTracker{
             boolean entryFlag = false;
             String apiUrl = getApiUrl();
             boolean emptyFlag = false;
-            int pageNum = 0;
+            int pageNum = 1;
             while (!emptyFlag) {
                 HttpURLConnection httpcon = (HttpURLConnection) new URL(apiUrl + "?page=" + pageNum).openConnection();
                 pageNum++;
@@ -40,41 +45,37 @@ public class GitIssueManager implements IIssueTracker{
                     emptyFlag = true;
                     continue;
                 }
-                int fromindex = 0;
-                int i = 0;
+                int i = issue.indexOf("\"number\":", 0);
                 while (i != -1) {
                     StringBuilder numberTicket = new StringBuilder();
-                    i = issue.indexOf("\"number\":", fromindex);
-                    fromindex = i + 1;
-                    if (i != -1) {
-                        while (issue.charAt(i) != ':') {
+                    while (issue.charAt(i) != ':') {
+                        i++;
+                    }
+                    while (issue.charAt(i) != ',') {
+                        if (issue.charAt(i) == ':') {
                             i++;
+                            continue;
                         }
-                        while (issue.charAt(i) != ',') {
-                            if (issue.charAt(i) == ':') {
-                                i++;
-                                continue;
-                            }
-                            numberTicket.append(issue.charAt(i));
-                            i++;
-                        }
-                        int curNum = Integer.parseInt(numberTicket.toString());
-                        if (entryFlag){
-                            if (curNum < start){
-                                return;
-                            }
-                        }
-                        if (curNum >= start & curNum <= end) {
-                            numbers.add(Integer.parseInt(numberTicket.toString()));
-                            entryFlag = true;
-                            httpcon = (HttpURLConnection) new URL(apiUrl + '/' + numberTicket).openConnection();
-                            in = new BufferedReader(new InputStreamReader(httpcon.getInputStream()));
-                            String curIssue = in.readLine();
-                            Gson gson = new Gson();
-                            Ticket ticket = gson.fromJson(curIssue, Ticket.class);
-                            ticketpack.add(ticket);
+                        numberTicket.append(issue.charAt(i));
+                        i++;
+                    }
+                    int curNum = Integer.parseInt(numberTicket.toString());
+                    if (entryFlag){
+                        if (curNum < start){
+                            return;
                         }
                     }
+                    if (curNum >= start & curNum <= end) {
+                        numbers.add(Integer.parseInt(numberTicket.toString()));
+                        entryFlag = true;
+                        httpcon = (HttpURLConnection) new URL(apiUrl + '/' + numberTicket).openConnection();
+                        in = new BufferedReader(new InputStreamReader(httpcon.getInputStream()));
+                        String curIssue = in.readLine();
+                        Gson gson = new Gson();
+                        Ticket ticket = gson.fromJson(curIssue, Ticket.class);
+                        ticketpack.add(ticket);
+                    }
+                    i = issue.indexOf("\"number\":", i + 1);
                 }
             }
         }catch (IOException ex){
@@ -158,7 +159,7 @@ public class GitIssueManager implements IIssueTracker{
     }
 
 
-    public String getStacktrace(String body, boolean screenOut){
+    public String getStacktrace(String body){
         if (body == null){
             return null;
         }
@@ -197,24 +198,64 @@ public class GitIssueManager implements IIssueTracker{
                 tmpStringBuilder.append(body.charAt(i));
                 i++;
             }
-            stringBuilder.append(tmpStringBuilder.toString());
+            stringBuilder.append(tmpStringBuilder.toString() + '\n');
             curi = i;
             i = body.indexOf("at ", i);
-            if (i != -1){
-                if(screenOut) {
-                    stringBuilder.append('\n');
+        }
+        return stringBuilder.toString();
+    }
+
+    public void findAssignee(BlameInspector blameInspector) throws IssueTrackerException, GitException, IOException {
+        Iterator<Ticket>ticketIterator = ticketpack.iterator();
+        while (ticketIterator.hasNext()){
+            Ticket ticket = ticketIterator.next();
+            String bodyStack = getStacktrace(ticket.getBody());
+            String attachStack = getStacktrace(isAttach(ticket.getBody()));
+            StackTrace stackTrace;
+            if(bodyStack != null){
+                stackTrace = new StackTrace();
+                try {
+                    stackTrace.getLines(bodyStack, blameInspector);
+                }catch (IOException ex){
+                    throw new IssueTrackerException(ex);
                 }
-                if(!screenOut){
-                    stringBuilder.append("<br>");
+                if (stackTrace.getFrame(0) != null) {
+                    String fileName = stackTrace.getFrame(0).getFileName();
+                    int numString = stackTrace.getFrame(0).getNumString();
+                    String whoIs = blameInspector.blame(fileName, numString);
+                    whoAssignee.put(ticket, whoIs);
+                }
+            }
+            if(attachStack != null){
+                stackTrace = new StackTrace();
+                try {
+                    stackTrace.getLines(attachStack, blameInspector);
+                }catch (IOException ex){
+                    throw new IssueTrackerException(ex);
+                }
+                if (stackTrace.getFrame(0) != null) {
+                    String fileName = stackTrace.getFrame(0).getFileName();
+                    int numString = stackTrace.getFrame(0).getNumString();
+                    String whoIs = blameInspector.blame(fileName, numString);
+                    if (!whoAssignee.isEmpty()) {
+                        if (whoAssignee.get(ticket) != whoIs) {
+                            whoAssignee.put(ticket, whoIs);
+                        }
+                    }
                 }
             }
         }
-        return stringBuilder.toString();
     }
 
 
     public ArrayList<Ticket> getTicketpack() {
         return ticketpack;
     }
+
+
+    public Map<Ticket, String> getWhoAssignee() {
+        return whoAssignee;
+    }
+
 
 }

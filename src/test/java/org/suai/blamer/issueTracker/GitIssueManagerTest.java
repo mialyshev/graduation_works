@@ -41,7 +41,7 @@ public class GitIssueManagerTest {
             String curIssue = in.readLine();
             Gson gson = new Gson();
             Ticket ticket = gson.fromJson(curIssue, Ticket.class);
-            response.add(gitIssueManager.getStacktrace(gitIssueManager.isAttach(ticket.getBody()), true));
+            response.add(gitIssueManager.getStacktrace(gitIssueManager.isAttach(ticket.getBody())));
         }
 
         Assert.assertTrue(response.get(0) == null);
@@ -73,7 +73,7 @@ public class GitIssueManagerTest {
             String curIssue = in.readLine();
             Gson gson = new Gson();
             Ticket ticket = gson.fromJson(curIssue, Ticket.class);
-            response.add(gitIssueManager.getStacktrace(ticket.getBody(), true));
+            response.add(gitIssueManager.getStacktrace(ticket.getBody()));
         }
 
         Assert.assertTrue(response.get(0) == null);
