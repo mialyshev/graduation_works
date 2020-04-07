@@ -13,8 +13,9 @@ import java.util.Map;
 
 
 public class BlameInspector {
+
     private String path;
-    private Map<String,String>fileInfo;
+    private Map<String,String> fileInfo;
 
     public BlameInspector(String path){
         this.path = path;
@@ -22,26 +23,22 @@ public class BlameInspector {
     }
 
 
-    public String blame(String filename, int stringNum) throws GitException, IOException {
+    public String blame(String filename, int stringNum) throws GitException{
         Git git;
         ObjectId commitID;
+        BlameResult blameResult;
+        String blamedUserName;
         try{
             git = Git.open(new File(this.path + "/.git"));
             commitID = git.getRepository().resolve("HEAD");
-        }catch (IOException ex){
-            throw new GitException(ex);
-        }
-        BlameCommand cmd = new BlameCommand(git.getRepository());
-        cmd.setStartCommit(commitID);
-        cmd.setFilePath(getFilePathInRepo(filename));
-        BlameResult blameResult;
-        try {
+            BlameCommand cmd = new BlameCommand(git.getRepository());
+            cmd.setStartCommit(commitID);
+            cmd.setFilePath(getFilePathInRepo(filename));
             blameResult = cmd.call();
-        }catch (GitAPIException ex){
+            blamedUserName = blameResult.getSourceAuthor(stringNum).getName();
+        }catch (GitAPIException | IOException ex){
             throw new GitException(ex);
         }
-
-        String blamedUserName = blameResult.getSourceAuthor(stringNum).getName();
         return blamedUserName;
 
     }
@@ -96,6 +93,15 @@ public class BlameInspector {
             return this.path + "/" + fileInfo.get(fileName);
         }
         return null;
+    }
+
+
+    public Map<String, String> getFileInfo() {
+        return fileInfo;
+    }
+
+    public String getPath() {
+        return path;
     }
 
 }

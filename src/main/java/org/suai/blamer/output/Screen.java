@@ -1,7 +1,7 @@
 package org.suai.blamer.output;
 
 
-import org.suai.blamer.issueTracker.ticket.Ticket;
+import org.suai.blamer.issuetracker.ticket.Ticket;
 
 
 import java.util.Map;

@@ -4,32 +4,41 @@ import org.suai.blamer.git.BlameInspector;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Map;
 
 public class StackTrace {
     private ArrayList<StackFrame> stackFrames;
+    String repoPath;
 
-    public StackTrace(){
+    public StackTrace(String path){
         stackFrames = new ArrayList<>();
+        repoPath = path;
     }
 
-    public void getLines(String str, BlameInspector blameInspector) throws IOException{
+    public void getLines(String str, Map<String,String> fileInfo) throws IOException{
         int i = str.indexOf("at");
 
-        while(i != -1) {
-            StringBuilder stringBuilder = new StringBuilder();
-            while (str.charAt(i) != '\n') {
-                stringBuilder.append(str.charAt(i));
-                i++;
-                if (i >= str.length()){
-                    break;
+        try {
+
+
+            while (i != -1) {
+                StringBuilder stringBuilder = new StringBuilder();
+                while (str.charAt(i) != '\n') {
+                    stringBuilder.append(str.charAt(i));
+                    i++;
+                    if (i >= str.length()) {
+                        break;
+                    }
                 }
+                StackFrame stackFrame = new StackFrame();
+                stackFrame.getStackInfo(stringBuilder.toString(), fileInfo, repoPath);
+                if (stackFrame.getCurString() != null) {
+                    stackFrames.add(stackFrame);
+                }
+                i = str.indexOf("at", i);
             }
-            StackFrame stackFrame = new StackFrame();
-            stackFrame.getStackInfo(stringBuilder.toString(), blameInspector);
-            if (stackFrame.getCurString() != null) {
-                stackFrames.add(stackFrame);
-            }
-            i = str.indexOf("at", i);
+        }catch (IOException ex){
+            throw new IOException(ex);
         }
     }
 

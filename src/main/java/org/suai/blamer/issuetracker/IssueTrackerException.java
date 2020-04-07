@@ -1,4 +1,4 @@
-package org.suai.blamer.issueTracker;
+package org.suai.blamer.issuetracker;
 
 public class IssueTrackerException extends Exception {
     public IssueTrackerException() {

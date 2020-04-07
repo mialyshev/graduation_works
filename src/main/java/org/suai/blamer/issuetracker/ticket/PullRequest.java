@@ -1,24 +1,12 @@
-package org.suai.blamer.issueTracker.ticket;
+package org.suai.blamer.issuetracker.ticket;
 
 import java.lang.reflect.Field;
 
-public class Milestone {
+public class PullRequest {
     public String url;
     public String html_url;
-    public String labels_url;
-    public String id;
-    public String node_id;
-    public String number;
-    public String state;
-    public String title;
-    public String description;
-    public User creator;
-    public String open_issues;
-    public String closed_issues;
-    public String created_at;
-    public String updated_at;
-    public String closed_at;
-    public String due_on;
+    public String diff_url;
+    public String patch_url;
 
     @Override
     public String toString() {

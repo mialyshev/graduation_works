@@ -1,66 +1,104 @@
 package org.suai.blamer;
 
+import org.apache.commons.cli.*;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
 import org.suai.blamer.git.BlameInspector;
-import org.suai.blamer.issueTracker.GitIssueManager;
-import org.suai.blamer.issueTracker.IssueTrackerException;
+import org.suai.blamer.git.GitException;
+import org.suai.blamer.issuetracker.GithubIssueManager;
+import org.suai.blamer.issuetracker.IssueTrackerException;
 import org.suai.blamer.output.HTMLPage;
 import org.suai.blamer.output.Screen;
 
 import java.io.IOException;
 
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.http.HttpClient;
+import java.util.Arrays;
 import java.util.Properties;
 
 public class Main{
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws IOException {
+        Options options = new Options();
+        options.addRequiredOption("s", "start", true, "Ticket start number");
+        options.addRequiredOption("e", "end", true, "Ticket end number");
+        options.addRequiredOption("o", "out", true, "You can write either 'screen' or 'html'");
+        options.addOption("f", "file", true, "The name of the file to display in html");
 
-        int startTicketNum = -1;
-        int endTicketNum = -1;
-        String out = null;
+        CommandLineParser parser = new DefaultParser();
+        CommandLine cmd = null;
         try {
-            if(args[0] != null){
-                startTicketNum = Integer.parseInt(args[0]);
+            cmd = parser.parse(options, args);
+
+            int startTicketNum = -1;
+            int endTicketNum = -1;
+            String out = null;
+            String htmlFilename = null;
+
+            if (cmd.hasOption("s")) {
+                startTicketNum = Integer.parseInt(cmd.getOptionValue("s"));
             }
-            if(args[1] != null ){
-                endTicketNum = Integer.parseInt(args[1]);
+            if (cmd.hasOption("e")) {
+                endTicketNum = Integer.parseInt(cmd.getOptionValue("e"));
             }
-            if(args[2] != null){
-                out = args[2];
+            if (cmd.hasOption("o")) {
+                out = cmd.getOptionValue("o");
             }
-        }catch (ArrayIndexOutOfBoundsException e){
-            e.printStackTrace();
-        }
-        Properties properties = new Properties();
-        try {
+            if (cmd.hasOption("f")) {
+                htmlFilename = cmd.getOptionValue("f");
+            }
+
+            System.out.println(startTicketNum + " " + endTicketNum + " " + out + " " + htmlFilename);
+
+            Properties properties = new Properties();
+
             InputStream input = Main.class.getClassLoader().getResourceAsStream("config.properties");
             properties.load(input);
-        } catch (IOException e) {
-            e.getMessage();
-        }
 
-        String url = properties.getProperty("url");
-        String path = properties.getProperty("path");
 
-        GitIssueManager gitIssueManager = new GitIssueManager(url);
-        try {
-            gitIssueManager.parse(startTicketNum, endTicketNum);
-        }catch (IssueTrackerException ex){
+            String url = properties.getProperty("url");
+            String path = properties.getProperty("path");
+
+            GithubIssueManager githubIssueManager = new GithubIssueManager(url);
+            githubIssueManager.parse(startTicketNum, endTicketNum);
+
+
+            BlameInspector blameInspector = new BlameInspector(path);
+            blameInspector.loadFolderInfo(path, "");
+
+            githubIssueManager.findAssignee(blameInspector);
+
+
+            if (out.equals("screen")) {
+                Screen screen = new Screen(githubIssueManager.getWhoAssignee());
+                screen.out();
+            }
+            if (out.equals("html")) {
+                HTMLPage htmlPage;
+                if (htmlFilename != null) {
+                    htmlPage = new HTMLPage(githubIssueManager.getWhoAssignee(), htmlFilename);
+                } else {
+                    htmlPage = new HTMLPage(githubIssueManager.getWhoAssignee());
+                }
+                htmlPage.out();
+            }
+        } catch (IOException | IssueTrackerException | GitException ex) {
             ex.printStackTrace();
+        } catch (ParseException pe) {
+            HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("blamer", options);
+            pe.printStackTrace();
         }
 
 
-        BlameInspector blameInspector = new BlameInspector(path);
-        blameInspector.loadFolderInfo(path, "");
 
-        gitIssueManager.findAssignee(blameInspector);
-
-        if (out.equals("screen")){
-            Screen screen = new Screen(gitIssueManager.getWhoAssignee());
-            screen.out();
-        }
-        if(out.equals("html")){
-            HTMLPage htmlPage = new HTMLPage(gitIssueManager.getWhoAssignee());
-            htmlPage.out();
-        }
     }
 }

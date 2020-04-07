@@ -3,61 +3,65 @@ package org.suai.blamer;
 import org.suai.blamer.git.BlameInspector;
 
 import java.io.*;
-
+import java.util.Map;
 
 
 public class StackFrame {
-    private String functionName = null;
-    private String fileName = null;
-    private String curString = null;
+    private String functionName;
+    private String fileName;
+    private String curString;
     private int numString;
 
     public StackFrame(){
     }
 
-    public void getStackInfo(String stackTrace, BlameInspector blameInspector) {
+    public void getStackInfo(String stackTrace, Map<String,String> fileInfo, String repoPath) throws IOException {
         boolean uknown = false;
         int i = stackTrace.indexOf('(') + 1;
         int start = i - 2;
         StringBuilder stringBuilder = new StringBuilder();
-        while (stackTrace.charAt(i) != ':'){
-            if (stackTrace.charAt(i) == ')'){
-                uknown = true;
-                break;
-            }
-            stringBuilder.append(stackTrace.charAt(i));
-            i++;
-        }
-        if (uknown){
-            this.fileName = "Unknown Source";
-        }
-        else {
-            this.fileName = stringBuilder.toString();
-        }
-
-        if (!uknown) {
-            i++;
-            stringBuilder = new StringBuilder();
-            while (stackTrace.charAt(i) != ')') {
+        try {
+            while (stackTrace.charAt(i) != ':') {
+                if (stackTrace.charAt(i) == ')') {
+                    uknown = true;
+                    break;
+                }
                 stringBuilder.append(stackTrace.charAt(i));
                 i++;
             }
-            numString = Integer.parseInt(stringBuilder.toString());
-        }
+            if (uknown) {
+                this.fileName = "Unknown Source";
+            } else {
+                this.fileName = stringBuilder.toString();
+            }
 
-        stringBuilder = new StringBuilder();
-        while (stackTrace.charAt(start) != '.'){
-            stringBuilder.append(stackTrace.charAt(start));
-            start--;
-        }
-        this.functionName = stringBuilder.reverse().toString();
+            if (!uknown) {
+                i++;
+                stringBuilder = new StringBuilder();
+                while (stackTrace.charAt(i) != ')') {
+                    stringBuilder.append(stackTrace.charAt(i));
+                    i++;
+                }
+                numString = Integer.parseInt(stringBuilder.toString());
+            }
+
+            stringBuilder = new StringBuilder();
+            while (stackTrace.charAt(start) != '.') {
+                stringBuilder.append(stackTrace.charAt(start));
+                start--;
+            }
+            this.functionName = stringBuilder.reverse().toString();
 
 
-        if(!uknown) {
-            String path = blameInspector.getFilePath(this.fileName);
-            if (path != null) {
-                int curLine = 1;
-                try {
+            if (!uknown) {
+                String path;
+                if (fileInfo.containsKey(fileName)) {
+                    path = repoPath + "/" + fileInfo.get(fileName);
+                } else {
+                    path = null;
+                }
+                if (path != null) {
+                    int curLine = 1;
                     FileReader fr = new FileReader(path);
                     BufferedReader reader = new BufferedReader(fr);
                     String line = reader.readLine();
@@ -69,10 +73,10 @@ public class StackFrame {
                         line = reader.readLine();
                         curLine++;
                     }
-                } catch (IOException ex) {
-                    ex.getMessage();
                 }
             }
+        }catch (IOException ex) {
+            throw new IOException(ex);
         }
     }
 

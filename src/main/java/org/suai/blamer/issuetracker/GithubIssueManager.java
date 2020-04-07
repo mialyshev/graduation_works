@@ -1,10 +1,10 @@
-package org.suai.blamer.issueTracker;
+package org.suai.blamer.issuetracker;
 
 import com.google.gson.Gson;
 import org.suai.blamer.StackTrace;
 import org.suai.blamer.git.BlameInspector;
 import org.suai.blamer.git.GitException;
-import org.suai.blamer.issueTracker.ticket.Ticket;
+import org.suai.blamer.issuetracker.ticket.Ticket;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -13,16 +13,20 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
 
-public class GitIssueManager implements IIssueTracker{
+public class GithubIssueManager implements IIssueTracker{
 
     private ArrayList<Ticket> ticketpack;
     private ArrayList<String> сollaborators;
     private ArrayList<Integer> numbers;
     private String url;
     private Map<Ticket, String>whoAssignee;
+    final String apiGit = "https://api.github.com/repos/";
+    final String github = "github.com";
+    final String issues = "/issues";
+    final String files = "/files/";
 
 
-    public GitIssueManager(String url) throws IOException {
+    public GithubIssueManager(String url){
         ticketpack = new ArrayList<>();
         сollaborators = new ArrayList<>();
         numbers = new ArrayList<>();
@@ -86,15 +90,15 @@ public class GitIssueManager implements IIssueTracker{
 
     public String getApiUrl(){
         StringBuilder curUrl = new StringBuilder();
-        curUrl.append("https://api.github.com/repos/");
-        int infoIndex = url.indexOf("github.com");
+        curUrl.append(apiGit);
+        int infoIndex = url.indexOf(github);
         int fromindex = infoIndex + 1;
         infoIndex = url.indexOf('/', fromindex) + 1;
         while (infoIndex != url.length()){
             curUrl.append(url.charAt(infoIndex));
             infoIndex++;
         }
-        curUrl.append("/issues");
+        curUrl.append(issues);
         return curUrl.toString();
     }
 
@@ -103,7 +107,7 @@ public class GitIssueManager implements IIssueTracker{
         Iterator<Ticket>iterator = ticketpack.iterator();
         while (iterator.hasNext()){
             Ticket curTicket = iterator.next();
-            if(Integer.parseInt(curTicket.number) == number){
+            if(Integer.parseInt(curTicket.getNumber()) == number){
                 return curTicket;
             }
         }
@@ -133,7 +137,7 @@ public class GitIssueManager implements IIssueTracker{
 
 
     public String isAttach(String body) throws IssueTrackerException {
-        String fileURL = this.url + "/files/";
+        String fileURL = this.url + files;
         if (!body.contains(fileURL)){
             return null;
         }
@@ -187,10 +191,10 @@ public class GitIssueManager implements IIssueTracker{
             if (i - curi > 15){
                 break;
             }
-            if (body.charAt(i - 1) >= 65 & body.charAt(i - 1) <= 90){
+            if (body.charAt(i - 1) >= 'A' & body.charAt(i - 1) <= 'Z'){
                 break;
             }
-            if (body.charAt(i - 1) >= 97 & body.charAt(i - 1) <= 122){
+            if (body.charAt(i - 1) >= 'a' & body.charAt(i - 1) <= 'z'){
                 break;
             }
             StringBuilder tmpStringBuilder = new StringBuilder();
@@ -205,45 +209,44 @@ public class GitIssueManager implements IIssueTracker{
         return stringBuilder.toString();
     }
 
-    public void findAssignee(BlameInspector blameInspector) throws IssueTrackerException, GitException, IOException {
+    public void findAssignee(BlameInspector blameInspector) throws IssueTrackerException, GitException{
         Iterator<Ticket>ticketIterator = ticketpack.iterator();
-        while (ticketIterator.hasNext()){
-            Ticket ticket = ticketIterator.next();
-            String bodyStack = getStacktrace(ticket.getBody());
-            String attachStack = getStacktrace(isAttach(ticket.getBody()));
-            StackTrace stackTrace;
-            if(bodyStack != null){
-                stackTrace = new StackTrace();
-                try {
-                    stackTrace.getLines(bodyStack, blameInspector);
-                }catch (IOException ex){
-                    throw new IssueTrackerException(ex);
+        try {
+            while (ticketIterator.hasNext()) {
+                Ticket ticket = ticketIterator.next();
+                String bodyStack = getStacktrace(ticket.getBody());
+                String attachStack = getStacktrace(isAttach(ticket.getBody()));
+                StackTrace stackTrace;
+                if (bodyStack != null) {
+                    stackTrace = new StackTrace(blameInspector.getPath());
+                    stackTrace.getLines(bodyStack, blameInspector.getFileInfo());
+                    if (stackTrace.getFrame(0) != null) {
+                        String fileName = stackTrace.getFrame(0).getFileName();
+                        int numString = stackTrace.getFrame(0).getNumString();
+                        String whoIs = blameInspector.blame(fileName, numString);
+                        whoAssignee.put(ticket, whoIs);
+                    }
+
                 }
-                if (stackTrace.getFrame(0) != null) {
-                    String fileName = stackTrace.getFrame(0).getFileName();
-                    int numString = stackTrace.getFrame(0).getNumString();
-                    String whoIs = blameInspector.blame(fileName, numString);
-                    whoAssignee.put(ticket, whoIs);
-                }
-            }
-            if(attachStack != null){
-                stackTrace = new StackTrace();
-                try {
-                    stackTrace.getLines(attachStack, blameInspector);
-                }catch (IOException ex){
-                    throw new IssueTrackerException(ex);
-                }
-                if (stackTrace.getFrame(0) != null) {
-                    String fileName = stackTrace.getFrame(0).getFileName();
-                    int numString = stackTrace.getFrame(0).getNumString();
-                    String whoIs = blameInspector.blame(fileName, numString);
-                    if (!whoAssignee.isEmpty()) {
-                        if (whoAssignee.get(ticket) != whoIs) {
-                            whoAssignee.put(ticket, whoIs);
+                if (attachStack != null) {
+                    stackTrace = new StackTrace(blameInspector.getPath());
+                    stackTrace.getLines(attachStack, blameInspector.getFileInfo());
+                    if (stackTrace.getFrame(0) != null) {
+                        String fileName = stackTrace.getFrame(0).getFileName();
+                        int numString = stackTrace.getFrame(0).getNumString();
+                        String whoIs = blameInspector.blame(fileName, numString);
+                        if (!whoAssignee.isEmpty()) {
+                            if (whoAssignee.get(ticket) != whoIs) {
+                                whoAssignee.put(ticket, whoIs);
+                            }
                         }
                     }
                 }
             }
+        }catch (IOException ex) {
+            throw new IssueTrackerException(ex);
+        }catch (GitException ex){
+            throw new GitException(ex);
         }
     }
 

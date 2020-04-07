@@ -1,4 +1,4 @@
-package org.suai.blamer.issueTracker.ticket;
+package org.suai.blamer.issuetracker.ticket;
 
 public class Permissions {
     public String pull;
