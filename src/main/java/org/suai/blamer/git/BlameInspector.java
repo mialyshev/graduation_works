@@ -7,7 +7,8 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.blame.BlameResult;
 import org.eclipse.jgit.lib.ObjectId;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,12 +36,11 @@ public class BlameInspector {
             cmd.setStartCommit(commitID);
             cmd.setFilePath(getFilePathInRepo(filename));
             blameResult = cmd.call();
-            blamedUserName = blameResult.getSourceAuthor(stringNum).getName();
+            blamedUserName = blameResult.getSourceAuthor(stringNum - 1 ).getName();
         }catch (GitAPIException | IOException ex){
             throw new GitException(ex);
         }
         return blamedUserName;
-
     }
 
     public void loadFolderInfo(String absPath, String repoPath){

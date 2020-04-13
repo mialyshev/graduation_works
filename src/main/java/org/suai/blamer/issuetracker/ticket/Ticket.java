@@ -46,10 +46,6 @@ public class Ticket {
         return stringBuilder.toString();
     }
 
-    public void setAssignee(User user){
-        assignee = user;
-    }
-
     public String getBody() {
         return body;
     }
@@ -57,5 +53,7 @@ public class Ticket {
     public String getNumber() {
         return number;
     }
+
+    public String getUrl() { return url; }
 }
 

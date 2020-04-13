@@ -1,6 +1,13 @@
 package org.suai.blamer.issuetracker;
 
 import com.google.gson.Gson;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.suai.blamer.StackTrace;
 import org.suai.blamer.git.BlameInspector;
 import org.suai.blamer.git.GitException;
@@ -10,8 +17,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 public class GithubIssueManager implements IIssueTracker{
 
@@ -20,28 +31,34 @@ public class GithubIssueManager implements IIssueTracker{
     private ArrayList<Integer> numbers;
     private String url;
     private Map<Ticket, String>whoAssignee;
+    String authStringEnc;
     final String apiGit = "https://api.github.com/repos/";
     final String github = "github.com";
     final String issues = "/issues";
     final String files = "/files/";
+    final String assignees = "/assignees";
 
 
-    public GithubIssueManager(String url){
+    public GithubIssueManager(String url, String login, String pwd){
         ticketpack = new ArrayList<>();
         сollaborators = new ArrayList<>();
         numbers = new ArrayList<>();
         this.url = url;
         whoAssignee = new HashMap<>();
+        String authString = login + ":" + pwd;
+        byte[] authEncBytes = Base64.encodeBase64(authString.getBytes());
+        authStringEnc = new String(authEncBytes);
     }
 
     public void parse(int start, int end) throws IssueTrackerException{
         try{
             boolean entryFlag = false;
-            String apiUrl = getApiUrl();
+            String apiUrl = getApiUrl(false);
             boolean emptyFlag = false;
             int pageNum = 1;
             while (!emptyFlag) {
                 HttpURLConnection httpcon = (HttpURLConnection) new URL(apiUrl + "?page=" + pageNum).openConnection();
+                httpcon.setRequestProperty("Authorization", "Basic " + authStringEnc);
                 pageNum++;
                 BufferedReader in = new BufferedReader(new InputStreamReader(httpcon.getInputStream()));
                 String issue = in.readLine();
@@ -73,6 +90,7 @@ public class GithubIssueManager implements IIssueTracker{
                         numbers.add(Integer.parseInt(numberTicket.toString()));
                         entryFlag = true;
                         httpcon = (HttpURLConnection) new URL(apiUrl + '/' + numberTicket).openConnection();
+                        httpcon.setRequestProperty("Authorization", "Basic " + authStringEnc);
                         in = new BufferedReader(new InputStreamReader(httpcon.getInputStream()));
                         String curIssue = in.readLine();
                         Gson gson = new Gson();
@@ -88,7 +106,7 @@ public class GithubIssueManager implements IIssueTracker{
     }
 
 
-    public String getApiUrl(){
+    public String getApiUrl(boolean assignee){
         StringBuilder curUrl = new StringBuilder();
         curUrl.append(apiGit);
         int infoIndex = url.indexOf(github);
@@ -98,7 +116,11 @@ public class GithubIssueManager implements IIssueTracker{
             curUrl.append(url.charAt(infoIndex));
             infoIndex++;
         }
-        curUrl.append(issues);
+        if (assignee){
+            curUrl.append(assignees);
+        }else {
+            curUrl.append(issues);
+        }
         return curUrl.toString();
     }
 
@@ -235,11 +257,14 @@ public class GithubIssueManager implements IIssueTracker{
                         String fileName = stackTrace.getFrame(0).getFileName();
                         int numString = stackTrace.getFrame(0).getNumString();
                         String whoIs = blameInspector.blame(fileName, numString);
-                        if (!whoAssignee.isEmpty()) {
+                        if(whoAssignee.containsKey(ticket)){
                             if (whoAssignee.get(ticket) != whoIs) {
                                 whoAssignee.put(ticket, whoIs);
                             }
+                        }else {
+                            whoAssignee.put(ticket, whoIs);
                         }
+
                     }
                 }
             }
@@ -260,5 +285,39 @@ public class GithubIssueManager implements IIssueTracker{
         return whoAssignee;
     }
 
+
+    public void setAssignee() throws IssueTrackerException{
+        if (!whoAssignee.isEmpty()) {
+            try {
+                for (Map.Entry<Ticket, String> pair : whoAssignee.entrySet()) {
+                    String curticketURL = pair.getKey().getUrl();
+                    String user = pair.getValue();
+                    String checkURL = getApiUrl(true);
+                    HttpURLConnection httpcon = (HttpURLConnection) new URL(checkURL + "/" + user).openConnection();
+                    httpcon.setRequestProperty("Authorization", "Basic " + authStringEnc);
+                    String status = httpcon.getHeaderField("Status");
+                    if(status != null){
+                        if (status.contains("204")) {
+                            HttpClient httpClient = HttpClientBuilder.create().build();
+                            JSONObject json = new JSONObject();
+                            ArrayList<String> list = new ArrayList<String>();
+                            list.add(user);
+                            json.put("assignees", new JSONArray(list));
+                            HttpPost request = new HttpPost(curticketURL);
+                            request.addHeader("Authorization", "Basic " + authStringEnc);
+                            StringEntity params = new StringEntity(json.toString());
+                            request.addHeader("content-type", "application/json");
+                            request.setEntity(params);
+                            httpClient.execute(request);
+                        }
+                    }
+                }
+            } catch (MalformedURLException e) {
+                throw new IssueTrackerException(e);
+            } catch (IOException e) {
+                throw new IssueTrackerException(e);
+            }
+        }
+    }
 
 }

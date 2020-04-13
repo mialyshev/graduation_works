@@ -31,7 +31,7 @@ public class GitIssueManagerTest {
         stringArrayList.add(url3);
         stringArrayList.add(url4);
 
-        GithubIssueManager gitIssueManager = new GithubIssueManager("https://github.com/mialyshev/webservice");
+        GithubIssueManager gitIssueManager = new GithubIssueManager("https://github.com/mialyshev/webservice", "login", "123");
         ArrayList<String> response = new ArrayList<>();
 
         Iterator<String> iterator = stringArrayList.iterator();
@@ -63,7 +63,7 @@ public class GitIssueManagerTest {
         stringArrayList.add(url3);
         stringArrayList.add(url4);
 
-        GithubIssueManager gitIssueManager = new GithubIssueManager("https://github.com/mialyshev/webservice");
+        GithubIssueManager gitIssueManager = new GithubIssueManager("https://github.com/mialyshev/webservice", "login", "123");
         ArrayList<String> response = new ArrayList<>();
 
         Iterator<String> iterator = stringArrayList.iterator();
