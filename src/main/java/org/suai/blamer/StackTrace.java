@@ -1,7 +1,5 @@
 package org.suai.blamer;
 
-import org.suai.blamer.git.BlameInspector;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
@@ -17,10 +15,7 @@ public class StackTrace {
 
     public void getLines(String str, Map<String,String> fileInfo) throws IOException{
         int i = str.indexOf("at");
-
         try {
-
-
             while (i != -1) {
                 StringBuilder stringBuilder = new StringBuilder();
                 while (str.charAt(i) != '\n') {

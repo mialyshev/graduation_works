@@ -220,7 +220,16 @@ public class GithubIssueManager implements IIssueTracker{
                 break;
             }
             StringBuilder tmpStringBuilder = new StringBuilder();
-            while(body.charAt(i) != '\n'){
+            while(body.charAt(i - 1) != ')'){
+                if(body.charAt(i) == '\r' | body.charAt(i) == '\n'){
+                    while(true){
+                        if(body.charAt(i) == '\r' | body.charAt(i) == '\n' | body.charAt(i) == ' '){
+                            i++;
+                        }else {
+                            break;
+                        }
+                    }
+                }
                 tmpStringBuilder.append(body.charAt(i));
                 i++;
             }
