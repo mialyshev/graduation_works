@@ -15,7 +15,7 @@
     * path - Path to the repository cloned in step 2. If the project is in the same directory as the jar file obtained in step 3, then you can specify only the name of the folder, not the full path    
     * projectname - Name of the project cloned in step 2  
     * issuepath - The path to the file where information about tickets that have already been analyzed will be stored. If the file is in the same directory as the jar file obtained in step 3, then you can specify only the name of the file, not the full path  
-5. Run the jar file using the following keys:  
+5. Run the blamer.jar file using the following keys:  
     * -c,--config properties <arg>   Path to file 'config.properties'.  
     * -e,--end <arg>                 Ticket end number. (_Default = 100000_)    
     * -f,--file <arg>                The name of the file to display in html. (_Default = output.html_)  
