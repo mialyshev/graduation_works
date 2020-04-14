@@ -1,4 +1,4 @@
-##Instruction
+## Instruction
 
 1. Clone this repository  
 2. Clone the repository of the project whose tickets you want to analyze  
