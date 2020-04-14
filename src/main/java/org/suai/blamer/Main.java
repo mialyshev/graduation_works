@@ -64,15 +64,16 @@ public class Main{
             String url = properties.getProperty("url");
             String path = properties.getProperty("path");
             String projectname = properties.getProperty("projectname");
+            String pathtoscan = properties.getProperty("issuespath");
 
-            CheckedIssueAnalyzer checkedIssueAnalyzer = new CheckedIssueAnalyzer("./scan.txt", projectname);
+            CheckedIssueAnalyzer checkedIssueAnalyzer = new CheckedIssueAnalyzer(pathtoscan, projectname);
             ArrayList<Integer> checkedIssues = checkedIssueAnalyzer.getIssueNumbers();
 
 
             GithubIssueManager githubIssueManager = new GithubIssueManager(url, login, pwd);
             githubIssueManager.parse(startTicketNum, endTicketNum, checkedIssues);
             checkedIssueAnalyzer.addNumbers(githubIssueManager.getNumbers());
-            
+
 
             BlameInspector blameInspector = new BlameInspector(path);
             blameInspector.loadFolderInfo(path, "");
