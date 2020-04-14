@@ -10,11 +10,11 @@ import org.suai.blamer.output.Screen;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Properties;
 
 public class Main{
     public static void main(String[] args) throws IOException {
-
         Options options = new Options();
         options.addRequiredOption("s", "start", true, "Ticket start number");
         options.addRequiredOption("e", "end", true, "Ticket end number");
@@ -54,6 +54,8 @@ public class Main{
                 pwd = cmd.getOptionValue("p");
             }
 
+
+
             Properties properties = new Properties();
 
             InputStream input = Main.class.getClassLoader().getResourceAsStream("config.properties");
@@ -61,10 +63,16 @@ public class Main{
 
             String url = properties.getProperty("url");
             String path = properties.getProperty("path");
+            String projectname = properties.getProperty("projectname");
+
+            CheckedIssueAnalyzer checkedIssueAnalyzer = new CheckedIssueAnalyzer("./scan.txt", projectname);
+            ArrayList<Integer> checkedIssues = checkedIssueAnalyzer.getIssueNumbers();
+
 
             GithubIssueManager githubIssueManager = new GithubIssueManager(url, login, pwd);
-            githubIssueManager.parse(startTicketNum, endTicketNum);
-
+            githubIssueManager.parse(startTicketNum, endTicketNum, checkedIssues);
+            checkedIssueAnalyzer.addNumbers(githubIssueManager.getNumbers());
+            
 
             BlameInspector blameInspector = new BlameInspector(path);
             blameInspector.loadFolderInfo(path, "");
@@ -91,7 +99,8 @@ public class Main{
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("blamer", options);
             pe.printStackTrace();
+        } catch (NullPointerException e){
+            e.printStackTrace();
         }
-
     }
 }

@@ -50,7 +50,7 @@ public class GithubIssueManager implements IIssueTracker{
         authStringEnc = new String(authEncBytes);
     }
 
-    public void parse(int start, int end) throws IssueTrackerException{
+    public void parse(int start, int end, ArrayList<Integer> checkedIssued) throws IssueTrackerException{
         try{
             boolean entryFlag = false;
             String apiUrl = getApiUrl(false);
@@ -86,7 +86,7 @@ public class GithubIssueManager implements IIssueTracker{
                             return;
                         }
                     }
-                    if (curNum >= start & curNum <= end) {
+                    if (curNum >= start & curNum <= end & !checkedIssued.contains(curNum)) {
                         numbers.add(Integer.parseInt(numberTicket.toString()));
                         entryFlag = true;
                         httpcon = (HttpURLConnection) new URL(apiUrl + '/' + numberTicket).openConnection();
