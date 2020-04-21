@@ -22,5 +22,7 @@
     * -t,--token <arg>               Personal access token from your github for authorization **(Required)**   
     * -o,--out <arg>                 You can write either 'screen' or 'html'. (_Default = screen_)      
     * -s,--start <arg>               Ticket start number. (_Default = 0_)    
-    
-    
+    * -m,--mode <arg>                Program mode. (_Default = 0_):  
+        * mode 0 - out all information to screen or html page  
+        * mode 1 - no screen output. "Autoassignee mode." The mode when the program itself assigns assignee to the desired ticket
+        * mode 2 - out to html page. The "Assignee" button appears with each ticket that makes an assignee  
