@@ -14,20 +14,23 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 public class Main{
+    private static Logger logger = Logger.getLogger(Main.class.getName());
     public static void main(String[] args) throws IOException {
         Options options = new Options();
         options.addOption("s", "start", true, "Ticket start number. Default = 0");
         options.addOption("e", "end", true, "Ticket end number. Default = 100000");
         options.addOption("o", "out", true, "You can write either 'screen' or 'html'. Default = screen");
-        options.addRequiredOption("l", "login", true, "Login from your github");
-        options.addRequiredOption("p", "password", true, "Password from your github");
+        options.addRequiredOption("t", "token", true, "Personal access token from your github for authorization");
         options.addOption("f", "file", true, "The name of the file to display in html. Default = output.html");
         options.addOption("c", "config properties", true, "Path to file 'config.properties'");
+        options.addOption("m", "mode", true, "Program mode. Default = '0'");
 
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = null;
+        logger.info("Parsing command line arguments");
         try {
             cmd = parser.parse(options, args);
 
@@ -35,9 +38,9 @@ public class Main{
             int endTicketNum = 100000;
             String out = "screen";
             String htmlFilename = null;
-            String login = null;
-            String pwd = null;
+            String token = null;
             String configPath = "config.properties";
+            int mode = 0;
 
             if (cmd.hasOption("s")) {
                 startTicketNum = Integer.parseInt(cmd.getOptionValue("s"));
@@ -51,16 +54,17 @@ public class Main{
             if (cmd.hasOption("f")) {
                 htmlFilename = cmd.getOptionValue("f");
             }
-            if (cmd.hasOption("l")) {
-                login = cmd.getOptionValue("l");
-            }
-            if (cmd.hasOption("p")) {
-                pwd = cmd.getOptionValue("p");
+            if (cmd.hasOption("t")) {
+                token = cmd.getOptionValue("t");
             }
             if (cmd.hasOption("c")) {
                 configPath = cmd.getOptionValue("c");
             }
+            if (cmd.hasOption("m")) {
+                mode = Integer.parseInt(cmd.getOptionValue("m"));
+            }
 
+            logger.info("Parsing config.properties file");
             Properties properties = new Properties();
 
             FileInputStream fis = new FileInputStream(configPath);
@@ -75,29 +79,35 @@ public class Main{
             ArrayList<Integer> checkedIssues = checkedIssueAnalyzer.getIssueNumbers();
 
 
-            GithubIssueManager githubIssueManager = new GithubIssueManager(url, login, pwd);
+            GithubIssueManager githubIssueManager = new GithubIssueManager(url, token);
             githubIssueManager.parse(startTicketNum, endTicketNum, checkedIssues);
             checkedIssueAnalyzer.addNumbers(githubIssueManager.getNumbers());
 
 
             BlameInspector blameInspector = new BlameInspector(path);
+            logger.info("Start scanning folder on path : " + path);
             blameInspector.loadFolderInfo(path, "");
 
             githubIssueManager.findAssignee(blameInspector);
-            githubIssueManager.setAssignee();
-
-            if (out.equals("screen")) {
-                Screen screen = new Screen(githubIssueManager.getWhoAssignee());
-                screen.out();
+            if (mode == 1) {
+                githubIssueManager.setAssignee();
             }
-            if (out.equals("html")) {
-                HTMLPage htmlPage;
-                if (htmlFilename != null) {
-                    htmlPage = new HTMLPage(githubIssueManager.getWhoAssignee(), htmlFilename);
-                } else {
-                    htmlPage = new HTMLPage(githubIssueManager.getWhoAssignee());
+
+
+            if (mode == 0) {
+                if (out.equals("screen")) {
+                    Screen screen = new Screen(githubIssueManager.getWhoAssignee());
+                    screen.out();
                 }
-                htmlPage.out();
+                if (out.equals("html")) {
+                    HTMLPage htmlPage;
+                    if (htmlFilename != null) {
+                        htmlPage = new HTMLPage(githubIssueManager.getWhoAssignee(), htmlFilename);
+                    } else {
+                        htmlPage = new HTMLPage(githubIssueManager.getWhoAssignee());
+                    }
+                    htmlPage.out();
+                }
             }
         } catch (IOException | IssueTrackerException | GitException ex) {
             ex.printStackTrace();

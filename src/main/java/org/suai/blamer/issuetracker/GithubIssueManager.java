@@ -1,7 +1,6 @@
 package org.suai.blamer.issuetracker;
 
 import com.google.gson.Gson;
-import org.apache.commons.codec.binary.Base64;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -12,6 +11,7 @@ import org.suai.blamer.StackTrace;
 import org.suai.blamer.git.BlameInspector;
 import org.suai.blamer.git.GitException;
 import org.suai.blamer.issuetracker.ticket.Ticket;
+import org.suai.blamer.issuetracker.ticket.User;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -23,90 +23,101 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class GithubIssueManager implements IIssueTracker{
 
+    private static Logger logger = Logger.getLogger(GithubIssueManager.class.getName());
     private ArrayList<Ticket> ticketpack;
-    private ArrayList<String> сollaborators;
+    private ArrayList<User> contibutors;
     private ArrayList<Integer> numbers;
     private String url;
     private Map<Ticket, String>whoAssignee;
-    String authStringEnc;
+    String authString;
     final String apiGit = "https://api.github.com/repos/";
     final String github = "github.com";
     final String issues = "/issues";
     final String files = "/files/";
     final String assignees = "/assignees";
+    final String contibutorstr = "/contributors";
 
 
-    public GithubIssueManager(String url, String login, String pwd){
+    public GithubIssueManager(String url, String token){
         ticketpack = new ArrayList<>();
-        сollaborators = new ArrayList<>();
+        contibutors = new ArrayList<>();
         numbers = new ArrayList<>();
         this.url = url;
         whoAssignee = new HashMap<>();
-        String authString = login + ":" + pwd;
-        byte[] authEncBytes = Base64.encodeBase64(authString.getBytes());
-        authStringEnc = new String(authEncBytes);
+        authString = token;
+    }
+
+    private void setContibutors(User[] users){
+        for (int i = 0; i < users.length; i++){
+            contibutors.add(users[i]);
+        }
+    }
+
+    private Integer setTickets(Ticket[] tickets, ArrayList<Integer> checkedIssued, int start, int end){
+        int num = 0;
+        for (int i = 0; i < tickets.length; i++) {
+            num = Integer.parseInt(tickets[i].getNumber());
+            if (num >= start & num <= end & !checkedIssued.contains(num)){
+                ticketpack.add(tickets[i]);
+                numbers.add(num);
+            }
+        }
+        return num;
     }
 
     public void parse(int start, int end, ArrayList<Integer> checkedIssued) throws IssueTrackerException{
         try{
-            boolean entryFlag = false;
-            String apiUrl = getApiUrl(false);
-            boolean emptyFlag = false;
+            logger.info("Get contributors");
             int pageNum = 1;
-            while (!emptyFlag) {
-                HttpURLConnection httpcon = (HttpURLConnection) new URL(apiUrl + "?page=" + pageNum).openConnection();
-                httpcon.setRequestProperty("Authorization", "Basic " + authStringEnc);
+            String contibutorURL = getApiUrl(false, true);
+            HttpURLConnection httpcon = (HttpURLConnection) new URL(contibutorURL +"?page=" + pageNum).openConnection();
+            httpcon.setRequestProperty("Authorization", "token " + authString);
+            BufferedReader in = new BufferedReader(new InputStreamReader(httpcon.getInputStream()));
+            String curpage = in.readLine();
+            Gson gson = new Gson();
+            while(!curpage.equals("[]")) {
+                User[] userArray = gson.fromJson(curpage, User[].class);
+                setContibutors(userArray);
                 pageNum++;
-                BufferedReader in = new BufferedReader(new InputStreamReader(httpcon.getInputStream()));
-                String issue = in.readLine();
-                if (issue.equals("[]")){
-                    emptyFlag = true;
-                    continue;
-                }
-                int i = issue.indexOf("\"number\":", 0);
-                while (i != -1) {
-                    StringBuilder numberTicket = new StringBuilder();
-                    while (issue.charAt(i) != ':') {
-                        i++;
-                    }
-                    while (issue.charAt(i) != ',') {
-                        if (issue.charAt(i) == ':') {
-                            i++;
-                            continue;
-                        }
-                        numberTicket.append(issue.charAt(i));
-                        i++;
-                    }
-                    int curNum = Integer.parseInt(numberTicket.toString());
-                    if (entryFlag){
-                        if (curNum < start){
-                            return;
-                        }
-                    }
-                    if (curNum >= start & curNum <= end & !checkedIssued.contains(curNum)) {
-                        numbers.add(Integer.parseInt(numberTicket.toString()));
-                        entryFlag = true;
-                        httpcon = (HttpURLConnection) new URL(apiUrl + '/' + numberTicket).openConnection();
-                        httpcon.setRequestProperty("Authorization", "Basic " + authStringEnc);
-                        in = new BufferedReader(new InputStreamReader(httpcon.getInputStream()));
-                        String curIssue = in.readLine();
-                        Gson gson = new Gson();
-                        Ticket ticket = gson.fromJson(curIssue, Ticket.class);
-                        ticketpack.add(ticket);
-                    }
-                    i = issue.indexOf("\"number\":", i + 1);
-                }
+                httpcon = (HttpURLConnection) new URL(contibutorURL +"?page=" + pageNum).openConnection();
+                httpcon.setRequestProperty("Authorization", "token " + authString);
+                in = new BufferedReader(new InputStreamReader(httpcon.getInputStream()));
+                curpage = in.readLine();
             }
+
+            logger.info("Start parsing issues (start :" + start + "; end : " + end + ")");
+            String apiUrl = getApiUrl(false, false);
+            pageNum = 1;
+            logger.info("Send request to URL : " + apiUrl + "?page=" + pageNum);
+            httpcon = (HttpURLConnection) new URL(apiUrl + "?page=" + pageNum).openConnection();
+            httpcon.setRequestProperty("Authorization", "token " + authString);
+            in = new BufferedReader(new InputStreamReader(httpcon.getInputStream()));
+            String issue = in.readLine();
+            while (!issue.equals("[]")){
+                Ticket[] tickets = gson.fromJson(issue, Ticket[].class);
+                int lastticketnum = setTickets(tickets, checkedIssued, start, end);
+                if(lastticketnum < start){
+                    break;
+                }
+                pageNum++;
+                logger.info("Send request to URL : " + apiUrl + "?page=" + pageNum);
+                httpcon = (HttpURLConnection) new URL(apiUrl +"?page=" + pageNum).openConnection();
+                httpcon.setRequestProperty("Authorization", "token " + authString);
+                in = new BufferedReader(new InputStreamReader(httpcon.getInputStream()));
+                issue = in.readLine();
+            }
+
         }catch (IOException ex){
             throw new IssueTrackerException(ex);
         }
     }
 
 
-    public String getApiUrl(boolean assignee){
+    public String getApiUrl(boolean assignee, boolean contributor){
         StringBuilder curUrl = new StringBuilder();
         curUrl.append(apiGit);
         int infoIndex = url.indexOf(github);
@@ -118,6 +129,8 @@ public class GithubIssueManager implements IIssueTracker{
         }
         if (assignee){
             curUrl.append(assignees);
+        }else if(contributor){
+            curUrl.append(contibutorstr);
         }else {
             curUrl.append(issues);
         }
@@ -159,6 +172,7 @@ public class GithubIssueManager implements IIssueTracker{
 
 
     public String isAttach(String body) throws IssueTrackerException {
+        logger.info("Analysis of the body for the presence of a attach");
         String fileURL = this.url + files;
         if (!body.contains(fileURL)){
             return null;
@@ -186,6 +200,7 @@ public class GithubIssueManager implements IIssueTracker{
 
 
     public String getStacktrace(String body){
+        logger.info("Analyze body for find stacktrace");
         if (body == null){
             return null;
         }
@@ -240,40 +255,60 @@ public class GithubIssueManager implements IIssueTracker{
         return stringBuilder.toString();
     }
 
+
+    private String getSourceName(String name){
+        Iterator<User>iterator = contibutors.iterator();
+        while (iterator.hasNext()){
+            String curLogin = iterator.next().getLogin();
+            if(curLogin.equals(name)){
+                return curLogin;
+            }
+        }
+        return null;
+    }
+
     public void findAssignee(BlameInspector blameInspector) throws IssueTrackerException, GitException{
         Iterator<Ticket>ticketIterator = ticketpack.iterator();
         try {
             while (ticketIterator.hasNext()) {
                 Ticket ticket = ticketIterator.next();
+                logger.info("Start analyze ticket with number : " + ticket.getNumber() + " to search for a trace stack in it");
                 String bodyStack = getStacktrace(ticket.getBody());
                 String attachStack = getStacktrace(isAttach(ticket.getBody()));
                 StackTrace stackTrace;
                 if (bodyStack != null) {
+                    logger.info("Start analyze stacktrace (body) in ticket with number : " + ticket.getNumber());
                     stackTrace = new StackTrace(blameInspector.getPath());
                     stackTrace.getLines(bodyStack, blameInspector.getFileInfo());
                     if (stackTrace.getFrame(0) != null) {
                         String fileName = stackTrace.getFrame(0).getFileName();
                         int numString = stackTrace.getFrame(0).getNumString();
                         String whoIs = blameInspector.blame(fileName, numString);
-                        whoAssignee.put(ticket, whoIs);
+                        String sourcename = getSourceName(whoIs);
+                        if (sourcename != null) {
+                            whoAssignee.put(ticket, whoIs);
+                        }
                     }
 
                 }
                 if (attachStack != null) {
+                    logger.info("Start analyze stacktrace (attach) in ticket with number : " + ticket.getNumber());
                     stackTrace = new StackTrace(blameInspector.getPath());
                     stackTrace.getLines(attachStack, blameInspector.getFileInfo());
                     if (stackTrace.getFrame(0) != null) {
                         String fileName = stackTrace.getFrame(0).getFileName();
                         int numString = stackTrace.getFrame(0).getNumString();
                         String whoIs = blameInspector.blame(fileName, numString);
-                        if(whoAssignee.containsKey(ticket)){
-                            if (whoAssignee.get(ticket) != whoIs) {
+                        String sourcename = getSourceName(whoIs);
+                        if (sourcename != null) {
+                            if (whoAssignee.containsKey(ticket)) {
+                                if (whoAssignee.get(ticket) != whoIs) {
+                                    whoAssignee.put(ticket, whoIs);
+                                }
+                            } else {
                                 whoAssignee.put(ticket, whoIs);
                             }
-                        }else {
-                            whoAssignee.put(ticket, whoIs);
                         }
-
                     }
                 }
             }
@@ -301,9 +336,10 @@ public class GithubIssueManager implements IIssueTracker{
                 for (Map.Entry<Ticket, String> pair : whoAssignee.entrySet()) {
                     String curticketURL = pair.getKey().getUrl();
                     String user = pair.getValue();
-                    String checkURL = getApiUrl(true);
+                    logger.info("Attempt to put assignee: " + user +  " on ticket number : " + pair.getKey().getNumber());
+                    String checkURL = getApiUrl(true, false);
                     HttpURLConnection httpcon = (HttpURLConnection) new URL(checkURL + "/" + user).openConnection();
-                    httpcon.setRequestProperty("Authorization", "Basic " + authStringEnc);
+                    httpcon.setRequestProperty("Authorization", "token " + authString);
                     String status = httpcon.getHeaderField("Status");
                     if(status != null){
                         if (status.contains("204")) {
@@ -313,7 +349,7 @@ public class GithubIssueManager implements IIssueTracker{
                             list.add(user);
                             json.put("assignees", new JSONArray(list));
                             HttpPost request = new HttpPost(curticketURL);
-                            request.addHeader("Authorization", "Basic " + authStringEnc);
+                            request.addHeader("Authorization", "token " + authString);
                             StringEntity params = new StringEntity(json.toString());
                             request.addHeader("content-type", "application/json");
                             request.setEntity(params);

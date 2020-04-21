@@ -3,10 +3,12 @@ package org.suai.blamer;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class StackTrace {
     private ArrayList<StackFrame> stackFrames;
     String repoPath;
+    private static Logger logger = Logger.getLogger(StackTrace.class.getName());
 
     public StackTrace(String path){
         stackFrames = new ArrayList<>();
@@ -14,6 +16,7 @@ public class StackTrace {
     }
 
     public void getLines(String str, Map<String,String> fileInfo) throws IOException{
+        logger.info("Parsing a stacktrace to glass stack frames");
         int i = str.indexOf("at");
         try {
             while (i != -1) {

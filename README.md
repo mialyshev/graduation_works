@@ -1,4 +1,4 @@
-##Instruction
+## Instruction
 
 1. Clone this repository  
 2. Clone the repository of the project whose tickets you want to analyze  
@@ -19,9 +19,8 @@
     * -c,--config properties <arg>   Path to file 'config.properties'.  
     * -e,--end <arg>                 Ticket end number. (_Default = 100000_)    
     * -f,--file <arg>                The name of the file to display in html. (_Default = output.html_)  
-    * -l,--login <arg>               Login from your github **(Required)**  
-    * -o,--out <arg>                 You can write either 'screen' or 'html'. (_Default = screen_)    
-    * -p,--password <arg>            Password from your github **(Required)**  
+    * -t,--token <arg>               Personal access token from your github for authorization **(Required)**   
+    * -o,--out <arg>                 You can write either 'screen' or 'html'. (_Default = screen_)      
     * -s,--start <arg>               Ticket start number. (_Default = 0_)    
     
     

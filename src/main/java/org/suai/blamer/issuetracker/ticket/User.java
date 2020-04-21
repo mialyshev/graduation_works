@@ -22,6 +22,7 @@ public class User {
     public String type;
     public String site_admin;
     public Permissions permissions;
+    public String contributions;
 
     @Override
     public String toString() {
@@ -36,5 +37,9 @@ public class User {
             }
         }
         return stringBuilder.toString();
+    }
+
+    public String getLogin() {
+        return login;
     }
 }

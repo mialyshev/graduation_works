@@ -11,10 +11,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 
 public class BlameInspector {
 
+    private static Logger logger = Logger.getLogger(BlameInspector.class.getName());
     private String path;
     private Map<String,String> fileInfo;
 
@@ -25,17 +27,20 @@ public class BlameInspector {
 
 
     public String blame(String filename, int stringNum) throws GitException{
+        logger.info("Try to blame file with name : " + filename);
         Git git;
         ObjectId commitID;
         BlameResult blameResult;
         String blamedUserName;
         try{
+            logger.info("Analyze git repository");
             git = Git.open(new File(this.path + "/.git"));
             commitID = git.getRepository().resolve("HEAD");
             BlameCommand cmd = new BlameCommand(git.getRepository());
             cmd.setStartCommit(commitID);
             cmd.setFilePath(getFilePathInRepo(filename));
             blameResult = cmd.call();
+            logger.info("Try to get name of author");
             blamedUserName = blameResult.getSourceAuthor(stringNum - 1 ).getName();
         }catch (GitAPIException | IOException ex){
             throw new GitException(ex);

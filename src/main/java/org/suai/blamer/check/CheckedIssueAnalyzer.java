@@ -3,6 +3,7 @@ package org.suai.blamer.check;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 public class CheckedIssueAnalyzer {
     File file;
@@ -10,9 +11,11 @@ public class CheckedIssueAnalyzer {
     String projectName;
     int stringNum;
     ArrayList<Integer> checkedNum;
+    private static Logger logger = Logger.getLogger(CheckedIssueAnalyzer.class.getName());
 
     public CheckedIssueAnalyzer(String path, String projectName) throws CheckedIssueException {
         this.filePath = path;
+        logger.info("Open file on path : " + filePath);
         file = new File(filePath);
         try {
             if(!file.exists()) {
@@ -28,6 +31,7 @@ public class CheckedIssueAnalyzer {
 
     public ArrayList<Integer> getIssueNumbers() throws CheckedIssueException {
         try {
+            logger.info("Reading file on path : " + filePath);
             FileReader fileReader = new FileReader(file);
             BufferedReader reader = new BufferedReader(fileReader);
             String line = reader.readLine();
@@ -76,8 +80,8 @@ public class CheckedIssueAnalyzer {
     }
 
     public void addNumbers(ArrayList<Integer> numbers) throws CheckedIssueException {
+        logger.info("Update data base");
         try {
-
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append(projectName + " [");
             Iterator<Integer> iterator = checkedNum.iterator();
