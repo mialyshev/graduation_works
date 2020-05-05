@@ -25,10 +25,10 @@ public class Milestone {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("\n");
         Field[] fields = this.getClass().getFields();
-        for(Field field: fields){
+        for(Field field: fields) {
             try {
                 stringBuilder.append("\t" + field.getName() + ": " + field.get(this) + "\n");
-            } catch (IllegalAccessException e) {
+            } catch(IllegalAccessException e) {
                 e.printStackTrace();
             }
         }

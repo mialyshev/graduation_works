@@ -1,6 +1,6 @@
 package org.suai.blamer.check;
 
-public class CheckedIssueException extends Exception{
+public class CheckedIssueException extends Exception {
 
     public CheckedIssueException() {
     }

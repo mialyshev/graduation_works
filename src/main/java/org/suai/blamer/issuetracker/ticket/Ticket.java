@@ -55,5 +55,10 @@ public class Ticket {
     }
 
     public String getUrl() { return url; }
+
+    public List<User> getAssignees() {
+        return assignees;
+    }
+
 }
 

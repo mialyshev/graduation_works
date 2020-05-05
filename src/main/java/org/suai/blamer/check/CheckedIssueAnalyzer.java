@@ -3,14 +3,15 @@ package org.suai.blamer.check;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Logger;
 
 public class CheckedIssueAnalyzer {
-    File file;
-    String filePath;
-    String projectName;
-    int stringNum;
-    ArrayList<Integer> checkedNum;
+    private File file;
+    private String filePath;
+    private String projectName;
+    private int stringNum;
+    private ArrayList<Integer> checkedNum;
     private static Logger logger = Logger.getLogger(CheckedIssueAnalyzer.class.getName());
 
     public CheckedIssueAnalyzer(String path, String projectName) throws CheckedIssueException {
@@ -21,7 +22,7 @@ public class CheckedIssueAnalyzer {
             if(!file.exists()) {
                 file.createNewFile();
             }
-        }catch (IOException e){
+        } catch(IOException e) {
             throw new CheckedIssueException("The file for the specified path (" + filePath + ") was not found");
         }
         stringNum = 0;
@@ -29,57 +30,55 @@ public class CheckedIssueAnalyzer {
         checkedNum = new ArrayList<>();
     }
 
-    public ArrayList<Integer> getIssueNumbers() throws CheckedIssueException {
+    public List<Integer> getIssueNumbers() throws CheckedIssueException {
         try {
             logger.info("Reading file on path : " + filePath);
             FileReader fileReader = new FileReader(file);
             BufferedReader reader = new BufferedReader(fileReader);
             String line = reader.readLine();
-            while (line != null) {
-                if (getProjectName(line).equals(projectName)) {
+            while(line != null) {
+                if(getProjectName(line).equals(projectName)) {
                     break;
                 }
                 line = reader.readLine();
                 stringNum++;
             }
-            ArrayList<Integer> checkedIssues = new ArrayList<>();
-            if (line == null) {
-                if (stringNum > 0) {
+
+            if(line == null) {
+                if(stringNum > 0) {
                     stringNum++;
                 }
-            } else {
+            }else {
                 int i = line.indexOf('[');
-                while (line.charAt(i) != ']') {
+                while(line.charAt(i) != ']') {
                     i++;
                     StringBuilder stringBuilder = new StringBuilder();
-                    while (line.charAt(i) != ';' & line.charAt(i) != ']') {
+                    while(line.charAt(i) != ';' && line.charAt(i) != ']') {
                         stringBuilder.append(line.charAt(i));
                         i++;
                     }
-                    if (stringBuilder.toString().length() != 0) {
+                    if(stringBuilder.toString().length() != 0) {
                         checkedNum.add(Integer.parseInt(stringBuilder.toString()));
                     }
-
                 }
             }
-            fileReader.close();
-        }catch (IOException e){
+        } catch(IOException e) {
             throw new CheckedIssueException("The open file for the specified path (" + filePath + ")");
         }
         return checkedNum;
     }
 
-    public String getProjectName(String line){
+    public String getProjectName(String line) {
         int i = 0;
         StringBuilder stringBuilder = new StringBuilder();
-        while (line.charAt(i) != ' '){
+        while(line.charAt(i) != ' ') {
             stringBuilder.append(line.charAt(i));
             i++;
         }
         return stringBuilder.toString();
     }
 
-    public void addNumbers(ArrayList<Integer> numbers) throws CheckedIssueException {
+    public void addNumbers(List<Integer> numbers) throws CheckedIssueException {
         logger.info("Update data base");
         try {
             StringBuilder stringBuilder = new StringBuilder();
@@ -87,8 +86,8 @@ public class CheckedIssueAnalyzer {
             Iterator<Integer> iterator = checkedNum.iterator();
             boolean firstIteration = true;
             int curi = 0;
-            while (iterator.hasNext()) {
-                if (!firstIteration & curi != checkedNum.size()) {
+            while(iterator.hasNext()) {
+                if(!firstIteration && curi != checkedNum.size()) {
                     stringBuilder.append(';');
                 }
                 int curnum = iterator.next();
@@ -96,14 +95,14 @@ public class CheckedIssueAnalyzer {
                 firstIteration = false;
                 curi++;
             }
-            if (numbers.size() != 0 & checkedNum.size() != 0) {
+            if(!numbers.isEmpty() && !checkedNum.isEmpty()) {
                 stringBuilder.append(';');
             }
             iterator = numbers.iterator();
             firstIteration = true;
             curi = 0;
-            while (iterator.hasNext()) {
-                if (!firstIteration & curi != numbers.size()) {
+            while(iterator.hasNext()) {
+                if(!firstIteration && curi != numbers.size()) {
                     stringBuilder.append(';');
                 }
                 int curnum = iterator.next();
@@ -117,27 +116,27 @@ public class CheckedIssueAnalyzer {
             FileReader fileReader = new FileReader(file);
             BufferedReader reader = new BufferedReader(fileReader);
             String line = reader.readLine();
-            if (line == null) {
+            if(line == null) {
                 stringToFile.append(stringBuilder.toString());
             }
             int curLine = 0;
-            while (line != null) {
-                if (curLine == stringNum) {
+            while(line != null) {
+                if(curLine == stringNum) {
                     stringToFile.append(stringBuilder.toString() + '\n');
-                } else {
+                }else {
                     stringToFile.append(line + '\n');
                 }
                 line = reader.readLine();
                 curLine++;
             }
-            if (curLine < stringNum) {
+            if(curLine < stringNum) {
                 stringToFile.append(stringBuilder.toString());
             }
             PrintWriter out = new PrintWriter(file);
             out.print(stringToFile.toString());
             out.flush();
             out.close();
-        }catch (IOException e){
+        } catch(IOException e) {
             throw new CheckedIssueException(e);
         }
     }
