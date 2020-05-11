@@ -11,26 +11,26 @@ public class HTMLPage {
     private Map<Ticket, Pair> ticketStringMap;
     private String outputFileName = "output.html";
 
-    public HTMLPage(Map<Ticket, Pair> whoIs){
+    public HTMLPage(Map<Ticket, Pair> whoIs) {
         ticketStringMap = whoIs;
     }
 
-    public HTMLPage(Map<Ticket, Pair> whoIs, String fileName){
+    public HTMLPage(Map<Ticket, Pair> whoIs, String fileName) {
         ticketStringMap = whoIs;
         outputFileName = fileName;
     }
 
     public void out() throws IOException {
-        if(!outputFileName.contains(".html")) {
+        if (!outputFileName.contains(".html")) {
             outputFileName += ".html";
         }
         FileWriter writer = new FileWriter("./" + outputFileName, false);
         writer.append("<html>");
         writer.append("<head>BlameInspector</head>");
         writer.append("<body>");
-        for(Map.Entry<Ticket, Pair> pair : ticketStringMap.entrySet()) {
+        for (Map.Entry<Ticket, Pair> pair : ticketStringMap.entrySet()) {
             writer.append("<h3>Ticket № " + pair.getKey().getNumber() + "</h3>");
-            if (pair.getValue().getSourceName() == "-1"){
+            if (pair.getValue().getSourceName() == "-1") {
                 writer.append("<p>This ticket cannot be processed because the file with the error described in the ticket was changed" + "</p><br>");
                 continue;
             }

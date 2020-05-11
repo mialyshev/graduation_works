@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 
 public class Main {
     private static Logger logger = Logger.getLogger(Main.class.getName());
+
     public static void main(String[] args) {
         Options options = new Options();
         options.addOption("s", "start", true, "Ticket start number. Default = 0");
@@ -42,25 +43,25 @@ public class Main {
             String configPath = "config.properties";
             String mode = "report";
 
-            if(cmd.hasOption("s")) {
+            if (cmd.hasOption("s")) {
                 startTicketNum = Integer.parseInt(cmd.getOptionValue("s"));
             }
-            if(cmd.hasOption("e")) {
+            if (cmd.hasOption("e")) {
                 endTicketNum = Integer.parseInt(cmd.getOptionValue("e"));
             }
-            if(cmd.hasOption("o")) {
+            if (cmd.hasOption("o")) {
                 out = cmd.getOptionValue("o");
             }
-            if(cmd.hasOption("f")) {
+            if (cmd.hasOption("f")) {
                 htmlFilename = cmd.getOptionValue("f");
             }
-            if(cmd.hasOption("t")) {
+            if (cmd.hasOption("t")) {
                 token = cmd.getOptionValue("t");
             }
-            if(cmd.hasOption("c")) {
+            if (cmd.hasOption("c")) {
                 configPath = cmd.getOptionValue("c");
             }
-            if(cmd.hasOption("m")) {
+            if (cmd.hasOption("m")) {
                 mode = cmd.getOptionValue("m");
             }
 
@@ -89,19 +90,19 @@ public class Main {
             blameInspector.loadFolderInfo(path, "");
 
             githubIssueManager.findAssignee(blameInspector);
-            if(mode == "autoassignee") {
+            if (mode == "autoassignee") {
                 githubIssueManager.setAssignee();
             }
 
 
-            if(mode == "report") {
-                if(out.equals("screen")) {
+            if (mode == "report") {
+                if (out.equals("screen")) {
                     Screen screen = new Screen(githubIssueManager.getWhoAssignee());
                     screen.out();
                 }
-                if(out.equals("html")) {
+                if (out.equals("html")) {
                     HTMLPage htmlPage;
-                    if(htmlFilename != null) {
+                    if (htmlFilename != null) {
                         htmlPage = new HTMLPage(githubIssueManager.getWhoAssignee(), htmlFilename);
                     } else {
                         htmlPage = new HTMLPage(githubIssueManager.getWhoAssignee());
@@ -109,12 +110,12 @@ public class Main {
                     htmlPage.out();
                 }
             }
-        } catch(IOException | IssueTrackerException | GitException ex) {
+        } catch (IOException | IssueTrackerException | GitException ex) {
             ex.printStackTrace();
-        } catch(ParseException pe) {
+        } catch (ParseException pe) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("blamer", options);
-        } catch(NullPointerException | CheckedIssueException e) {
+        } catch (NullPointerException | CheckedIssueException e) {
             e.printStackTrace();
         }
     }

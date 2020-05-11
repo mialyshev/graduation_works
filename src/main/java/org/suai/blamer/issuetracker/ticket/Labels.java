@@ -2,7 +2,7 @@ package org.suai.blamer.issuetracker.ticket;
 
 import java.lang.reflect.Field;
 
-public class Labels{
+public class Labels {
     public String id;
     public String node_id;
     public String url;
@@ -16,7 +16,7 @@ public class Labels{
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("\n");
         Field[] fields = this.getClass().getFields();
-        for(Field field: fields) {
+        for (Field field : fields) {
             try {
                 stringBuilder.append("\t" + field.getName() + ": " + field.get(this) + "\n");
             } catch (IllegalAccessException e) {

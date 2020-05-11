@@ -36,7 +36,7 @@ public class Ticket {
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
         Field[] fields = this.getClass().getFields();
-        for(Field field: fields){
+        for (Field field : fields) {
             try {
                 stringBuilder.append(field.getName() + ": " + field.get(this) + "\n");
             } catch (IllegalAccessException e) {
@@ -54,7 +54,9 @@ public class Ticket {
         return number;
     }
 
-    public String getUrl() { return url; }
+    public String getUrl() {
+        return url;
+    }
 
     public List<User> getAssignees() {
         return assignees;

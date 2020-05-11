@@ -22,13 +22,13 @@ import java.util.*;
 import java.util.logging.Logger;
 
 
-public class GithubIssueManager implements IIssueTracker{
+public class GithubIssueManager implements IIssueTracker {
     private static Logger logger = Logger.getLogger(GithubIssueManager.class.getName());
     private ArrayList<Ticket> ticketpack;
     private ArrayList<User> contibutors;
     private ArrayList<Integer> numbers;
     private String url;
-    private Map<Ticket, Pair>whoAssignee;
+    private Map<Ticket, Pair> whoAssignee;
     private String authString;
     private static final String API_GIT = "https://api.github.com/repos/";
     private static final String GITHUB = "github.com";
@@ -50,18 +50,18 @@ public class GithubIssueManager implements IIssueTracker{
         authString = token;
     }
 
-    private void setContibutors(User[] users){
+    private void setContibutors(User[] users) {
         Collections.addAll(contibutors, users);
     }
 
     private Integer setTickets(Ticket[] tickets, List<Integer> checkedIssued, int start, int end) {
         int num = 0;
-        for(int i = 0; i < tickets.length; i++) {
+        for (int i = 0; i < tickets.length; i++) {
             num = Integer.parseInt(tickets[i].getNumber());
-            if(num < start) {
+            if (num < start) {
                 break;
             }
-            if(num >= start && num <= end && !checkedIssued.contains(num) && tickets[i].getAssignees().size() == 0) {
+            if (num >= start && num <= end && !checkedIssued.contains(num) && tickets[i].getAssignees().size() == 0) {
                 ticketpack.add(tickets[i]);
                 numbers.add(num);
             }
@@ -69,7 +69,7 @@ public class GithubIssueManager implements IIssueTracker{
         return num;
     }
 
-    public void parse(int start, int end, List<Integer> checkedIssued) throws IssueTrackerException{
+    public void parse(int start, int end, List<Integer> checkedIssued) throws IssueTrackerException {
         logger.info("Start parsing");
         try {
             logger.info("Get contributors");
@@ -80,7 +80,7 @@ public class GithubIssueManager implements IIssueTracker{
             BufferedReader in = new BufferedReader(new InputStreamReader(httpcon.getInputStream()));
             String curpage = in.readLine();
             Gson gson = new Gson();
-            while(!curpage.equals("[]")) {
+            while (!curpage.equals("[]")) {
                 User[] userArray = gson.fromJson(curpage, User[].class);
                 setContibutors(userArray);
                 pageNum++;
@@ -101,7 +101,7 @@ public class GithubIssueManager implements IIssueTracker{
             while (!issue.equals("[]")) {
                 Ticket[] tickets = gson.fromJson(issue, Ticket[].class);
                 int lastticketnum = setTickets(tickets, checkedIssued, start, end);
-                if(lastticketnum < start) {
+                if (lastticketnum < start) {
                     break;
                 }
                 pageNum++;
@@ -123,13 +123,13 @@ public class GithubIssueManager implements IIssueTracker{
         int infoIndex = url.indexOf(GITHUB);
         int fromindex = infoIndex + 1;
         infoIndex = url.indexOf('/', fromindex) + 1;
-        while(infoIndex != url.length()) {
+        while (infoIndex != url.length()) {
             curUrl.append(url.charAt(infoIndex));
             infoIndex++;
         }
-        if(assignee) {
+        if (assignee) {
             curUrl.append(ASSIGNEES);
-        } else if(contributor) {
+        } else if (contributor) {
             curUrl.append(CONTRIBUTORS);
         } else {
             curUrl.append(ISSUES);
@@ -138,22 +138,22 @@ public class GithubIssueManager implements IIssueTracker{
     }
 
 
-    public List<Integer> getNumbers(){
+    public List<Integer> getNumbers() {
         return numbers;
     }
 
     public String isAttach(String body) throws IssueTrackerException {
         logger.info("Analysis of the body for the presence of a attach");
         String fileURL = this.url + FILES;
-        if(body == null) {
+        if (body == null) {
             return null;
         }
-        if(!body.contains(fileURL)) {
+        if (!body.contains(fileURL)) {
             return null;
         }
         StringBuilder stringBuilder = new StringBuilder();
         int i = body.indexOf(fileURL);
-        while(body.charAt(i) != ')') {
+        while (body.charAt(i) != ')') {
             stringBuilder.append(body.charAt(i));
             i++;
         }
@@ -162,8 +162,8 @@ public class GithubIssueManager implements IIssueTracker{
             BufferedReader in = new BufferedReader(new InputStreamReader(httpcon.getInputStream()));
             String attachLine = in.readLine();
             stringBuilder = new StringBuilder();
-            while(attachLine != null) {
-                stringBuilder.append(attachLine +'\n');
+            while (attachLine != null) {
+                stringBuilder.append(attachLine + '\n');
                 attachLine = in.readLine();
             }
         } catch (IOException ex) {
@@ -173,46 +173,62 @@ public class GithubIssueManager implements IIssueTracker{
     }
 
 
-    public String getStacktrace(String body) {
+    private boolean checkcurstring(String body, int i) {
+        if (i >= 2) {
+            if (body.charAt(i - 1) >= 'A' && body.charAt(i - 1) <= 'Z') {
+                return false;
+            }
+            if (body.charAt(i - 1) >= 'a' && body.charAt(i - 1) <= 'z') {
+                i = body.indexOf("at ", i + 1);
+                return false;
+            }
+            if (body.charAt(i - 1) == '\t') {
+                return true;
+            }
+            if (body.charAt(i - 1) == ' ' && body.charAt(i - 2) == ' ') {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public ArrayList<String> getStacktrace(String body) {
         logger.info("Analyze body for find stacktrace");
-        if(body == null) {
+        ArrayList<String> arrayList = new ArrayList<>();
+        if (body == null) {
             return null;
         }
         int i = body.indexOf("at ");
-        if(i == -1) {
+        while (i != -1) {
+            if (!checkcurstring(body, i)) {
+                i = body.indexOf("at ", i + 1);
+            } else {
+                break;
+            }
+        }
+        if (i == -1) {
             return null;
         }
-        StringBuilder stringBuilder = new StringBuilder();
-        while(true) {
-            if(i == -1) {
-                return null;
+        int next = body.indexOf("at ", i + 1);
+        while (next != -1) {
+            if (!checkcurstring(body, next)) {
+                next = body.indexOf("at ", next + 1);
+            } else {
+                break;
             }
-            if(i > 2) {
-                if(body.charAt(i - 1) == '\t') {
-                    break;
-                }
-                if(body.charAt(i - 1) == ' ' && body.charAt(i - 2) == ' ') {
-                    break;
-                }
-            }
-            i = body.indexOf("at ", i + 1);
         }
-        int curi = i;
-        while(i != -1) {
-            if(i - curi > 15) {
-                break;
-            }
-            if(body.charAt(i - 1) >= 'A' && body.charAt(i - 1) <= 'Z') {
-                break;
-            }
-            if(body.charAt(i - 1) >= 'a' && body.charAt(i - 1) <= 'z') {
-                break;
-            }
-            StringBuilder tmpStringBuilder = new StringBuilder();
-            while(body.charAt(i - 1) != ')' && body.charAt(i) != '`') {
-                if(body.charAt(i) == '\r' || body.charAt(i) == '\n') {
-                    while(true) {
-                        if(body.charAt(i) == '\r' || body.charAt(i) == '\n' || body.charAt(i) == ' ') {
+        while (i != -1) {
+            StringBuilder stringBuilder = new StringBuilder();
+            while (body.charAt(i - 1) != ')' && i != body.length()) {
+                if (next != -1 && i == next) {
+                    break;
+                }
+                if (body.charAt(i) == '\r' || body.charAt(i) == '\n') {
+                    while (true) {
+                        if (i == body.length()) {
+                            break;
+                        }
+                        if (body.charAt(i) == '\r' || body.charAt(i) == '\n' || body.charAt(i) == ' ') {
                             i++;
                         } else {
                             break;
@@ -220,48 +236,59 @@ public class GithubIssueManager implements IIssueTracker{
                     }
                     continue;
                 }
-                tmpStringBuilder.append(body.charAt(i));
+                stringBuilder.append(body.charAt(i));
                 i++;
             }
-            stringBuilder.append(tmpStringBuilder.toString() + '\n');
-            curi = i;
-            i = body.indexOf("at ", i);
+            arrayList.add(stringBuilder.toString());
+            i = next;
+            if (i == -1) {
+                break;
+            }
+            next = body.indexOf("at ", i + 1);
+            while (next != -1) {
+                if (!checkcurstring(body, next)) {
+                    next = body.indexOf("at ", next + 1);
+                } else {
+                    break;
+                }
+            }
         }
-        return stringBuilder.toString();
+        return arrayList;
     }
 
 
     private String getSourceName(String name) {
-        Iterator<User>iterator = contibutors.iterator();
-        while(iterator.hasNext()) {
+        Iterator<User> iterator = contibutors.iterator();
+        while (iterator.hasNext()) {
             String curLogin = iterator.next().getLogin();
-            if(curLogin.equals(name)) {
+            if (curLogin.equals(name)) {
                 return curLogin;
             }
         }
         return null;
     }
 
+
     public void findAssignee(BlameInspector blameInspector) throws IssueTrackerException, GitException {
-        Iterator<Ticket>ticketIterator = ticketpack.iterator();
+        Iterator<Ticket> ticketIterator = ticketpack.iterator();
         try {
-            while(ticketIterator.hasNext()) {
+            while (ticketIterator.hasNext()) {
                 Ticket ticket = ticketIterator.next();
                 logger.info("Start analyze ticket with number : " + ticket.getNumber() + " to search for a trace stack in it");
-                String bodyStack = getStacktrace(ticket.getBody());
-                String attachStack = getStacktrace(isAttach(ticket.getBody()));
+                ArrayList<String> bodyStack = getStacktrace(ticket.getBody());
+                ArrayList<String> attachStack = getStacktrace(isAttach(ticket.getBody()));
                 StackTrace stackTrace;
-                if(bodyStack != null) {
+                if (bodyStack != null && !bodyStack.isEmpty()) {
                     logger.info("Start analyze stacktrace (body) in ticket with number : " + ticket.getNumber());
                     stackTrace = new StackTrace(blameInspector.getPath());
                     stackTrace.getLines(bodyStack, blameInspector.getFileInfo());
-                    if(stackTrace.getFrame(0) != null) {
+                    if (stackTrace.getFrame(0) != null) {
                         String fileName = stackTrace.getFrame(0).getFileName();
                         int numString = stackTrace.getFrame(0).getNumString();
                         String whoIs = blameInspector.blame(fileName, numString);
-                        if (whoIs == "-1"){
+                        if (whoIs == "-1") {
                             whoAssignee.put(ticket, new Pair(whoIs, false));
-                        }else {
+                        } else {
                             String sourcename = getSourceName(whoIs);
                             if (sourcename != null) {
                                 whoAssignee.put(ticket, new Pair(sourcename, true));
@@ -272,17 +299,17 @@ public class GithubIssueManager implements IIssueTracker{
                     }
 
                 }
-                if(attachStack != null) {
+                if (attachStack != null && !attachStack.isEmpty()) {
                     logger.info("Start analyze stacktrace (attach) in ticket with number : " + ticket.getNumber());
                     stackTrace = new StackTrace(blameInspector.getPath());
                     stackTrace.getLines(attachStack, blameInspector.getFileInfo());
-                    if(stackTrace.getFrame(0) != null) {
+                    if (stackTrace.getFrame(0) != null) {
                         String fileName = stackTrace.getFrame(0).getFileName();
                         int numString = stackTrace.getFrame(0).getNumString();
                         String whoIs = blameInspector.blame(fileName, numString);
-                        if (whoIs == "-1"){
+                        if (whoIs == "-1") {
                             whoAssignee.put(ticket, new Pair(whoIs, false));
-                        }else {
+                        } else {
                             String sourcename = getSourceName(whoIs);
                             if (whoAssignee.containsKey(ticket)) {
                                 if (whoAssignee.get(ticket).getSourceName() != whoIs) {
@@ -303,34 +330,34 @@ public class GithubIssueManager implements IIssueTracker{
                     }
                 }
             }
-        } catch(IOException ex) {
+        } catch (IOException ex) {
             throw new IssueTrackerException(ex);
-        } catch(GitException ex) {
+        } catch (GitException ex) {
             throw new GitException(ex);
         }
     }
 
 
-    public Map<Ticket, Pair> getWhoAssignee(){
+    public Map<Ticket, Pair> getWhoAssignee() {
         return whoAssignee;
     }
 
 
     public void setAssignee() throws IssueTrackerException {
-        if(!whoAssignee.isEmpty()) {
+        if (!whoAssignee.isEmpty()) {
             try {
-                for(Map.Entry<Ticket, Pair> pair : whoAssignee.entrySet()) {
+                for (Map.Entry<Ticket, Pair> pair : whoAssignee.entrySet()) {
                     String curticketURL = pair.getKey().getUrl();
                     String user = pair.getValue().getSourceName();
-                    if (user == "-1"){
+                    if (user == "-1") {
                         continue;
                     }
-                    logger.info("Attempt to put assignee: " + user +  " on ticket number : " + pair.getKey().getNumber());
+                    logger.info("Attempt to put assignee: " + user + " on ticket number : " + pair.getKey().getNumber());
                     String checkURL = getApiUrl(true, false);
                     HttpURLConnection httpcon = (HttpURLConnection) new URL(checkURL + "/" + user).openConnection();
                     httpcon.setRequestProperty(AUTHORIZATION, TOKEN + authString);
                     String status = httpcon.getHeaderField("Status");
-                    if(status != null && status.contains("204")) {
+                    if (status != null && status.contains("204")) {
                         HttpClient httpClient = HttpClientBuilder.create().build();
                         JSONObject json = new JSONObject();
                         ArrayList<String> list = new ArrayList<>();
@@ -344,7 +371,7 @@ public class GithubIssueManager implements IIssueTracker{
                         httpClient.execute(request);
                     }
                 }
-            } catch(IOException e) {
+            } catch (IOException e) {
                 throw new IssueTrackerException(e);
             }
         }

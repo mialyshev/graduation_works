@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 public class BlameInspector {
     private static Logger logger = Logger.getLogger(BlameInspector.class.getName());
     private String path;
-    private Map<String,String> fileInfo;
+    private Map<String, String> fileInfo;
 
     public BlameInspector(String path) {
         this.path = path;
@@ -41,9 +41,9 @@ public class BlameInspector {
             blameResult = cmd.call();
             logger.info("Try to get name of author");
             blamedUserName = blameResult.getSourceAuthor(stringNum - 1).getName();
-        } catch(GitAPIException | IOException | NullPointerException ex) {
+        } catch (GitAPIException | IOException | NullPointerException ex) {
             throw new GitException(ex);
-        }catch (ArrayIndexOutOfBoundsException e){
+        } catch (ArrayIndexOutOfBoundsException e) {
             return "-1";
         }
         return blamedUserName;
@@ -51,17 +51,16 @@ public class BlameInspector {
 
     public void loadFolderInfo(String absPath, String repoPath) {
         File folder = new File(absPath);
-        for(File file : folder.listFiles()) {
+        for (File file : folder.listFiles()) {
             String curPath = "";
-            if(repoPath == "") {
+            if (repoPath == "") {
                 curPath = file.getName();
-            }else {
+            } else {
                 curPath = repoPath + "/" + file.getName();
             }
-            if(file.isDirectory()) {
+            if (file.isDirectory()) {
                 loadFolderInfo(file.getAbsolutePath(), curPath);
-            }
-            else {
+            } else {
                 fileInfo.put(file.getName(), curPath);
             }
         }
@@ -69,7 +68,7 @@ public class BlameInspector {
 
 
     public String getFilePathInRepo(String fileName) {
-        if(fileInfo.containsKey(fileName)) {
+        if (fileInfo.containsKey(fileName)) {
             return fileInfo.get(fileName);
         }
         return null;
@@ -77,18 +76,18 @@ public class BlameInspector {
 
 
     public String getFilePath(String fileName) {
-        if(fileInfo.containsKey(fileName)) {
+        if (fileInfo.containsKey(fileName)) {
             return this.path + "/" + fileInfo.get(fileName);
         }
         return null;
     }
 
 
-    public Map<String, String> getFileInfo(){
+    public Map<String, String> getFileInfo() {
         return fileInfo;
     }
 
-    public String getPath(){
+    public String getPath() {
         return path;
     }
 
