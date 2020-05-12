@@ -6,7 +6,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.suai.blamer.issuetracker.ticket.Ticket;
 
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -32,10 +31,10 @@ public class GitIssueManagerTest {
         stringArrayList.add(url4);
 
         GithubIssueManager gitIssueManager = new GithubIssueManager("https://github.com/mialyshev/webservice", "token");
-        ArrayList<String> response = new ArrayList<>();
+        ArrayList<ArrayList<String>> response = new ArrayList<>();
 
         Iterator<String> iterator = stringArrayList.iterator();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             HttpURLConnection httpcon = (HttpURLConnection) new URL(iterator.next()).openConnection();
             BufferedReader in = new BufferedReader(new InputStreamReader(httpcon.getInputStream()));
             String curIssue = in.readLine();
@@ -64,10 +63,9 @@ public class GitIssueManagerTest {
         stringArrayList.add(url4);
 
         GithubIssueManager gitIssueManager = new GithubIssueManager("https://github.com/mialyshev/webservice", "token");
-        ArrayList<String> response = new ArrayList<>();
-
+        ArrayList<ArrayList<String>> response = new ArrayList<>();
         Iterator<String> iterator = stringArrayList.iterator();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             HttpURLConnection httpcon = (HttpURLConnection) new URL(iterator.next()).openConnection();
             BufferedReader in = new BufferedReader(new InputStreamReader(httpcon.getInputStream()));
             String curIssue = in.readLine();
