@@ -90,12 +90,8 @@ public class Main {
             blameInspector.loadFolderInfo(path, "");
 
             githubIssueManager.findAssignee(blameInspector);
-            if (mode == "autoassignee") {
+            if (mode.equals("autoassignee")) {
                 githubIssueManager.setAssignee();
-            }
-
-
-            if (mode == "report") {
                 if (out.equals("screen")) {
                     Screen screen = new Screen(githubIssueManager.getWhoAssignee());
                     screen.out();
@@ -109,6 +105,33 @@ public class Main {
                     }
                     htmlPage.out();
                 }
+            }
+
+
+            if (mode.equals("report")) {
+                if (out.equals("screen")) {
+                    Screen screen = new Screen(githubIssueManager.getWhoAssignee());
+                    screen.out();
+                }
+                if (out.equals("html")) {
+                    HTMLPage htmlPage;
+                    if (htmlFilename != null) {
+                        htmlPage = new HTMLPage(githubIssueManager.getWhoAssignee(), htmlFilename);
+                    } else {
+                        htmlPage = new HTMLPage(githubIssueManager.getWhoAssignee());
+                    }
+                    htmlPage.out();
+                }
+            }
+
+            if (mode.equals("buttonreport")) {
+                HTMLPage htmlPage;
+                if (htmlFilename != null) {
+                    htmlPage = new HTMLPage(githubIssueManager.getWhoAssignee(), htmlFilename, true, token);
+                } else {
+                    htmlPage = new HTMLPage(githubIssueManager.getWhoAssignee(), true, token);
+                }
+                htmlPage.out();
             }
         } catch (IOException | IssueTrackerException | GitException ex) {
             ex.printStackTrace();

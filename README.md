@@ -30,5 +30,5 @@
     * -e,--end <arg>                 Ticket end number. (_Default = 100000_)    
     * -m,--mode <arg>                Program mode. (_Default = 0_):  
         * mode "report" - out all information to screen or html page  
-        * mode "autoassignee" - no screen output. "Autoassignee mode." The mode when the program itself assigns assignee to the desired ticket
-        * mode "htmlreport" - out to html page. The "Assignee" button appears with each ticket that makes an assignee  
+        * mode "autoassignee" - "Autoassignee mode." The mode when the program itself assigns assignee to the desired ticket and out report  
+        * mode "buttonreport" - out to html page. The "Assignee" button appears with each ticket that makes an assignee  
