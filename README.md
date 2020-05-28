@@ -24,11 +24,10 @@
         3. After go to the tab "Personal access tokens"  
         4. Click to the button "Generate new token"  
         5. From the proposed list of options, select "repo", "user" and after that click the "Generate token" button  
-        6. After that, you will receive your token  
-    * -o,--out <arg>                 You can write either 'screen' or 'html'. (_Default = screen_)      
+        6. After that, you will receive your token        
     * -s,--start <arg>               Ticket start number. (_Default = 0_)  
     * -e,--end <arg>                 Ticket end number. (_Default = 100000_)    
     * -m,--mode <arg>                Program mode. (_Default = 0_):  
-        * mode "report" - out all information to screen or html page  
-        * mode "autoassignee" - "Autoassignee mode." The mode when the program itself assigns assignee to the desired ticket and out report  
+        * mode "report" - out all information to screen.    
+        * mode "autoassignee" - "Autoassignee mode." The mode when the program itself assigns assignee to the desired ticket and out report to screen   
         * mode "buttonreport" - out to html page. The "Assignee" button appears with each ticket that makes an assignee  

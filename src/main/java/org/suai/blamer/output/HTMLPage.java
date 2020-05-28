@@ -13,14 +13,6 @@ public class HTMLPage {
     private Boolean isButtonReport = false;
     private String token;
 
-    public HTMLPage(Map<Ticket, Pair> whoIs) {
-        ticketStringMap = whoIs;
-    }
-
-    public HTMLPage(Map<Ticket, Pair> whoIs, String fileName) {
-        ticketStringMap = whoIs;
-        outputFileName = fileName;
-    }
 
     public HTMLPage(Map<Ticket, Pair> whoIs, String fileName, boolean isButton, String token) {
         ticketStringMap = whoIs;
@@ -41,13 +33,9 @@ public class HTMLPage {
         }
         FileWriter writer = new FileWriter("./" + outputFileName, false);
         writer.append("<html>");
-        if (isButtonReport) {
-            writer.append("<head><h2>BlameInspector</h2><br>");
-            writer.append(getScript());
-            writer.append("</head>");
-        } else {
-            writer.append("<head><h2>BlameInspector</h2></head>");
-        }
+        writer.append("<head><h2>BlameInspector</h2><br>");
+        writer.append(getScript());
+        writer.append("</head>");
         writer.append("<body>");
         for (Map.Entry<Ticket, Pair> pair : ticketStringMap.entrySet()) {
             writer.append("<h3>Ticket № " + pair.getKey().getNumber() + "</h3>");
@@ -57,9 +45,7 @@ public class HTMLPage {
             }
             if (pair.getValue().getisAuthor() == true) {
                 writer.append("<p>Assignee to " + pair.getValue().getSourceName() + "</p><br>");
-                if (isButtonReport) {
-                    writer.append("<button onclick=\"setassignee('" + pair.getKey().getUrl() + "', '" + token + "', '" + pair.getValue().getSourceName() + "')\">Assignee</button>");
-                }
+                writer.append("<button onclick=\"setassignee('" + pair.getKey().getUrl() + "', '" + token + "', '" + pair.getValue().getSourceName() + "')\">Assignee</button>");
             } else {
                 writer.append("<p>Assignee to " + pair.getValue().getSourceName() + "<br>" + "Such user was not found in collaborators and cannot be appointed responsible for this issue." + "</p><br>");
             }

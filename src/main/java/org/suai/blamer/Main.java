@@ -23,7 +23,6 @@ public class Main {
         Options options = new Options();
         options.addOption("s", "start", true, "Ticket start number. Default = 0");
         options.addOption("e", "end", true, "Ticket end number. Default = 100000");
-        options.addOption("o", "out", true, "You can write either 'screen' or 'html'. Default = screen");
         options.addRequiredOption("t", "token", true, "Personal access token from your github for authorization");
         options.addOption("f", "file", true, "The name of the file to display in html. Default = output.html");
         options.addOption("c", "config properties", true, "Path to file 'config.properties'");
@@ -37,7 +36,6 @@ public class Main {
 
             int startTicketNum = 0;
             int endTicketNum = 100000;
-            String out = "screen";
             String htmlFilename = null;
             String token = null;
             String configPath = "config.properties";
@@ -48,9 +46,6 @@ public class Main {
             }
             if (cmd.hasOption("e")) {
                 endTicketNum = Integer.parseInt(cmd.getOptionValue("e"));
-            }
-            if (cmd.hasOption("o")) {
-                out = cmd.getOptionValue("o");
             }
             if (cmd.hasOption("f")) {
                 htmlFilename = cmd.getOptionValue("f");
@@ -92,36 +87,13 @@ public class Main {
             githubIssueManager.findAssignee(blameInspector);
             if (mode.equals("autoassignee")) {
                 githubIssueManager.setAssignee();
-                if (out.equals("screen")) {
-                    Screen screen = new Screen(githubIssueManager.getWhoAssignee());
-                    screen.out();
-                }
-                if (out.equals("html")) {
-                    HTMLPage htmlPage;
-                    if (htmlFilename != null) {
-                        htmlPage = new HTMLPage(githubIssueManager.getWhoAssignee(), htmlFilename);
-                    } else {
-                        htmlPage = new HTMLPage(githubIssueManager.getWhoAssignee());
-                    }
-                    htmlPage.out();
-                }
+                Screen screen = new Screen(githubIssueManager.getWhoAssignee());
+                screen.out();
             }
 
-
             if (mode.equals("report")) {
-                if (out.equals("screen")) {
-                    Screen screen = new Screen(githubIssueManager.getWhoAssignee());
-                    screen.out();
-                }
-                if (out.equals("html")) {
-                    HTMLPage htmlPage;
-                    if (htmlFilename != null) {
-                        htmlPage = new HTMLPage(githubIssueManager.getWhoAssignee(), htmlFilename);
-                    } else {
-                        htmlPage = new HTMLPage(githubIssueManager.getWhoAssignee());
-                    }
-                    htmlPage.out();
-                }
+                Screen screen = new Screen(githubIssueManager.getWhoAssignee());
+                screen.out();
             }
 
             if (mode.equals("buttonreport")) {
