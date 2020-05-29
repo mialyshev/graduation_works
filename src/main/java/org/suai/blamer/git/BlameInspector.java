@@ -18,30 +18,29 @@ public class BlameInspector {
     private static Logger logger = Logger.getLogger(BlameInspector.class.getName());
     private String path;
     private Map<String, String> fileInfo;
+    Git git;
+    ObjectId commitID;
 
-    public BlameInspector(String path) {
+    public BlameInspector(String path) throws IOException {
         this.path = path;
         fileInfo = new HashMap<>();
+        git = Git.open(new File(this.path + "/.git"));
+        commitID = git.getRepository().resolve("HEAD");
     }
 
 
     public String blame(String filename, int stringNum) throws GitException {
         logger.info("Try to blame file with name : " + filename);
-        Git git;
-        ObjectId commitID;
         BlameResult blameResult;
         String blamedUserName;
         try {
-            logger.info("Analyze git repository");
-            git = Git.open(new File(this.path + "/.git"));
-            commitID = git.getRepository().resolve("HEAD");
-            BlameCommand cmd = new BlameCommand(git.getRepository());
-            cmd.setStartCommit(commitID);
+            BlameCommand cmd = new BlameCommand(this.git.getRepository());
+            cmd.setStartCommit(this.commitID);
             cmd.setFilePath(getFilePathInRepo(filename));
             blameResult = cmd.call();
             logger.info("Try to get name of author");
             blamedUserName = blameResult.getSourceAuthor(stringNum - 1).getName();
-        } catch (GitAPIException | IOException | NullPointerException ex) {
+        } catch (GitAPIException | NullPointerException ex) {
             throw new GitException(ex);
         } catch (ArrayIndexOutOfBoundsException e) {
             return "-1";
