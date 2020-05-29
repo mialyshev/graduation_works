@@ -12,6 +12,7 @@ import org.suai.blamer.git.BlameInspector;
 import org.suai.blamer.git.GitException;
 import org.suai.blamer.issuetracker.ticket.Ticket;
 import org.suai.blamer.issuetracker.ticket.User;
+import org.suai.blamer.issuetracker.ticket.UserFullInfo;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -25,18 +26,21 @@ import java.util.logging.Logger;
 public class GithubIssueManager implements IIssueTracker {
     private static Logger logger = Logger.getLogger(GithubIssueManager.class.getName());
     private ArrayList<Ticket> ticketpack;
-    private ArrayList<User> contibutors;
+    private ArrayList<String> contibutors;
+    private Map<String, String> contributorsFullInfo;
     private ArrayList<Integer> numbers;
     private String url;
     private Map<Ticket, Pair> whoAssignee;
     private String authString;
     private Map<String, TicketInfoPair> analyzedTicket;
-    private static final String API_GIT = "https://api.github.com/repos/";
+    private static final String API_GIT = "https://api.github.com";
+    private static final String REPOS = "/repos/";
     private static final String GITHUB = "github.com";
     private static final String ISSUES = "/issues";
     private static final String FILES = "/files/";
     private static final String ASSIGNEES = "/assignees";
     private static final String CONTRIBUTORS = "/contributors";
+    private static final String USERS = "/users/";
     private static final String PAGE = "?page=";
     private static final String AUTHORIZATION = "Authorization";
     private static final String TOKEN = "token ";
@@ -50,10 +54,13 @@ public class GithubIssueManager implements IIssueTracker {
         whoAssignee = new HashMap<>();
         authString = token;
         analyzedTicket = new HashMap<>();
+        contributorsFullInfo = new HashMap<>();
     }
 
     private void setContibutors(User[] users) {
-        Collections.addAll(contibutors, users);
+        for (int i = 0; i < users.length; i++){
+            contibutors.add(users[i].login);
+        }
     }
 
     private Integer setTickets(Ticket[] tickets, List<Integer> checkedIssued, int start, int end) {
@@ -92,6 +99,23 @@ public class GithubIssueManager implements IIssueTracker {
                 curpage = in.readLine();
             }
 
+            logger.info("Get contributors full info");
+            Iterator<String> iterator = contibutors.iterator();
+            while (iterator.hasNext()){
+                contibutorURL = API_GIT + USERS + iterator.next();
+                httpcon = (HttpURLConnection) new URL(contibutorURL).openConnection();
+                httpcon.setRequestProperty(AUTHORIZATION, TOKEN + authString);
+                in = new BufferedReader(new InputStreamReader(httpcon.getInputStream()));
+                curpage = in.readLine();
+                UserFullInfo userFullInfo = gson.fromJson(curpage, UserFullInfo.class);
+                if (userFullInfo.name != null){
+                    contributorsFullInfo.put(userFullInfo.name, userFullInfo.login);
+                }
+                if (userFullInfo.email != null){
+                    contributorsFullInfo.put(userFullInfo.email, userFullInfo.login);
+                }
+            }
+
             logger.info("Start parsing issues (start :" + start + "; end : " + end + ")");
             String apiUrl = getApiUrl(false, false);
             pageNum = 1;
@@ -121,7 +145,7 @@ public class GithubIssueManager implements IIssueTracker {
 
     public String getApiUrl(boolean assignee, boolean contributor) {
         StringBuilder curUrl = new StringBuilder();
-        curUrl.append(API_GIT);
+        curUrl.append(API_GIT + REPOS);
         int infoIndex = url.indexOf(GITHUB);
         int fromindex = infoIndex + 1;
         infoIndex = url.indexOf('/', fromindex) + 1;
@@ -262,17 +286,12 @@ public class GithubIssueManager implements IIssueTracker {
     }
 
 
-    private String getSourceName(String name) {
-        Iterator<User> iterator = contibutors.iterator();
-        while (iterator.hasNext()) {
-            String curLogin = iterator.next().getLogin();
-            if (curLogin.equals(name)) {
-                return curLogin;
-            }
+    public String getSourceName(String name){
+        if (contributorsFullInfo.containsKey(name)){
+            return contributorsFullInfo.get(name);
         }
         return null;
     }
-
 
     private Integer isDuplicate(String filename, int stringnum) {
         if (analyzedTicket.containsKey(filename)) {
@@ -307,11 +326,21 @@ public class GithubIssueManager implements IIssueTracker {
                             if (whoIs == "-1") {
                                 whoAssignee.put(ticket, new Pair(whoIs, false));
                             } else {
-                                String sourcename = getSourceName(whoIs);
-                                if (sourcename != null) {
-                                    whoAssignee.put(ticket, new Pair(sourcename, true));
+                                if (contibutors.contains(whoIs)) {
+                                    whoAssignee.put(ticket, new Pair(whoIs, true));
                                 } else {
-                                    whoAssignee.put(ticket, new Pair(whoIs, false));
+                                    String sourcename = getSourceName(whoIs);
+                                    if (sourcename != null){
+                                        if (contibutors.contains(sourcename)) {
+                                            whoAssignee.put(ticket, new Pair(sourcename, true));
+                                        }
+                                        else {
+                                            whoAssignee.put(ticket, new Pair(whoIs, false));
+                                        }
+                                    }
+                                    else {
+                                        whoAssignee.put(ticket, new Pair(whoIs, false));
+                                    }
                                 }
                             }
                         }else{
@@ -334,20 +363,40 @@ public class GithubIssueManager implements IIssueTracker {
                             if (whoIs == "-1") {
                                 whoAssignee.put(ticket, new Pair(whoIs, false));
                             } else {
-                                String sourcename = getSourceName(whoIs);
                                 if (whoAssignee.containsKey(ticket)) {
                                     if (whoAssignee.get(ticket).getSourceName() != whoIs) {
-                                        if (sourcename != null) {
-                                            whoAssignee.put(ticket, new Pair(sourcename, true));
+                                        if (contibutors.contains(whoIs)) {
+                                            whoAssignee.put(ticket, new Pair(whoIs, true));
                                         } else {
-                                            whoAssignee.put(ticket, new Pair(whoIs, false));
+                                            String sourcename = getSourceName(whoIs);
+                                            if (sourcename != null){
+                                                if (contibutors.contains(sourcename)) {
+                                                    whoAssignee.put(ticket, new Pair(sourcename, true));
+                                                }
+                                                else {
+                                                    whoAssignee.put(ticket, new Pair(whoIs, false));
+                                                }
+                                            }else {
+                                                whoAssignee.put(ticket, new Pair(whoIs, false));
+                                            }
                                         }
                                     }
                                 } else {
-                                    if (sourcename != null) {
-                                        whoAssignee.put(ticket, new Pair(sourcename, true));
+                                    if (contibutors.contains(whoIs)) {
+                                        whoAssignee.put(ticket, new Pair(whoIs, true));
                                     } else {
-                                        whoAssignee.put(ticket, new Pair(whoIs, false));
+                                        String sourcename = getSourceName(whoIs);
+                                        if (sourcename != null){
+                                            if (contibutors.contains(sourcename)) {
+                                                whoAssignee.put(ticket, new Pair(sourcename, true));
+                                            }
+                                            else {
+                                                whoAssignee.put(ticket, new Pair(whoIs, false));
+                                            }
+                                        }
+                                        else {
+                                            whoAssignee.put(ticket, new Pair(whoIs, false));
+                                        }
                                     }
                                 }
                             }
