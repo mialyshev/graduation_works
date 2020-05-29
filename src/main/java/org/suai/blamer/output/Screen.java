@@ -14,6 +14,10 @@ public class Screen {
 
     public void out() {
         for (Map.Entry<Ticket, Pair> pair : ticketStringMap.entrySet()) {
+            if (pair.getValue().isDublicate()){
+                System.out.println("Ticket №" + pair.getKey().getNumber() + " is a duplicate of the Ticket №" + pair.getValue().getNumber());
+                continue;
+            }
             if (pair.getValue().getSourceName() == "-1") {
                 System.out.println("Ticket №" + pair.getKey().getNumber() + "\nThis ticket cannot be processed because the file with the error described in the ticket was changed");
                 continue;

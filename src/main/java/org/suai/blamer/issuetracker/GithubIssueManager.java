@@ -30,7 +30,7 @@ public class GithubIssueManager implements IIssueTracker {
     private String url;
     private Map<Ticket, Pair> whoAssignee;
     private String authString;
-    private Map<String, Integer> analyzedTicket;
+    private Map<String, TicketInfoPair> analyzedTicket;
     private static final String API_GIT = "https://api.github.com/repos/";
     private static final String GITHUB = "github.com";
     private static final String ISSUES = "/issues";
@@ -187,6 +187,9 @@ public class GithubIssueManager implements IIssueTracker {
             if (body.charAt(i - 1) == '\t') {
                 return true;
             }
+            if (body.charAt(i - 1) == '\n') {
+                return true;
+            }
             if (body.charAt(i - 1) == ' ' && body.charAt(i - 2) == ' ') {
                 return true;
             }
@@ -271,13 +274,13 @@ public class GithubIssueManager implements IIssueTracker {
     }
 
 
-    private boolean isDuplicate(String filename, int stringnum) {
+    private Integer isDuplicate(String filename, int stringnum) {
         if (analyzedTicket.containsKey(filename)) {
-            if (analyzedTicket.get(filename) == stringnum) {
-                return true;
+            if (analyzedTicket.get(filename).getStringNumber() == stringnum) {
+                return analyzedTicket.get(filename).getTicketNumber();
             }
         }
-        return false;
+        return -1;
     }
 
 
@@ -297,8 +300,9 @@ public class GithubIssueManager implements IIssueTracker {
                     if (stackTrace.getFrame(0) != null) {
                         String fileName = stackTrace.getFrame(0).getFileName();
                         int numString = stackTrace.getFrame(0).getNumString();
-                        if (!isDuplicate(fileName, numString)){
-                            analyzedTicket.put(fileName, numString);
+                        int dublicate = isDuplicate(fileName, numString);
+                        analyzedTicket.put(fileName, new TicketInfoPair(numString, Integer.parseInt(ticket.getNumber())));
+                        if (dublicate == -1){
                             String whoIs = blameInspector.blame(fileName, numString);
                             if (whoIs == "-1") {
                                 whoAssignee.put(ticket, new Pair(whoIs, false));
@@ -310,6 +314,8 @@ public class GithubIssueManager implements IIssueTracker {
                                     whoAssignee.put(ticket, new Pair(whoIs, false));
                                 }
                             }
+                        }else{
+                            whoAssignee.put(ticket, new Pair(true, dublicate));
                         }
                     }
 
@@ -321,7 +327,9 @@ public class GithubIssueManager implements IIssueTracker {
                     if (stackTrace.getFrame(0) != null) {
                         String fileName = stackTrace.getFrame(0).getFileName();
                         int numString = stackTrace.getFrame(0).getNumString();
-                        if (!isDuplicate(fileName, numString)) {
+                        int dublicate = isDuplicate(fileName, numString);
+                        analyzedTicket.put(fileName, new TicketInfoPair(numString, Integer.parseInt(ticket.getNumber())));
+                        if (dublicate == -1){
                             String whoIs = blameInspector.blame(fileName, numString);
                             if (whoIs == "-1") {
                                 whoAssignee.put(ticket, new Pair(whoIs, false));
@@ -343,6 +351,8 @@ public class GithubIssueManager implements IIssueTracker {
                                     }
                                 }
                             }
+                        }else{
+                            whoAssignee.put(ticket, new Pair(true, dublicate));
                         }
                     }
                 }
@@ -366,7 +376,7 @@ public class GithubIssueManager implements IIssueTracker {
                 for (Map.Entry<Ticket, Pair> pair : whoAssignee.entrySet()) {
                     String curticketURL = pair.getKey().getUrl();
                     String user = pair.getValue().getSourceName();
-                    if (user == "-1") {
+                    if (user == "-1" || user == null) {
                         continue;
                     }
                     logger.info("Attempt to put assignee: " + user + " on ticket number : " + pair.getKey().getNumber());

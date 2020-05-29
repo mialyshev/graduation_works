@@ -39,8 +39,12 @@ public class HTMLPage {
         writer.append("<body>");
         for (Map.Entry<Ticket, Pair> pair : ticketStringMap.entrySet()) {
             writer.append("<h3>Ticket № " + pair.getKey().getNumber() + "</h3>");
+            if (pair.getValue().isDublicate()){
+                writer.append("<p>Ticket №" + pair.getKey().getNumber() + " is a duplicate of the Ticket №" + pair.getValue().getNumber() + "</p><br>");
+                continue;
+            }
             if (pair.getValue().getSourceName() == "-1") {
-                writer.append("<p>This ticket cannot be processed because the file with the error described in the ticket was changed" + "</p><br>");
+                writer.append("<p>This ticket cannot be processed because the file with the error described in the ticket was changed</p><br>");
                 continue;
             }
             if (pair.getValue().getisAuthor() == true) {
