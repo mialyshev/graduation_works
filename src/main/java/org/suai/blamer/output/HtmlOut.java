@@ -1,27 +1,27 @@
 package org.suai.blamer.output;
 
-import org.suai.blamer.issuetracker.Pair;
+import org.suai.blamer.issuetracker.ItemAssignee;
 import org.suai.blamer.issuetracker.ticket.Ticket;
 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Map;
 
-public class HTMLPage {
-    private Map<Ticket, Pair> ticketStringMap;
+public class HtmlOut {
+    private Map<Ticket, ItemAssignee> ticketStringMap;
     private String outputFileName = "output.html";
     private Boolean isButtonReport = false;
     private String token;
 
 
-    public HTMLPage(Map<Ticket, Pair> whoIs, String fileName, boolean isButton, String token) {
+    public HtmlOut(Map<Ticket, ItemAssignee> whoIs, String fileName, boolean isButton, String token) {
         ticketStringMap = whoIs;
         outputFileName = fileName;
         isButtonReport = isButton;
         this.token = token;
     }
 
-    public HTMLPage(Map<Ticket, Pair> whoIs, boolean isButton, String token) {
+    public HtmlOut(Map<Ticket, ItemAssignee> whoIs, boolean isButton, String token) {
         ticketStringMap = whoIs;
         isButtonReport = isButton;
         this.token = token;
@@ -37,13 +37,13 @@ public class HTMLPage {
         writer.append(getScript());
         writer.append("</head>");
         writer.append("<body>");
-        for (Map.Entry<Ticket, Pair> pair : ticketStringMap.entrySet()) {
+        for (Map.Entry<Ticket, ItemAssignee> pair : ticketStringMap.entrySet()) {
             writer.append("<h3>Ticket № " + pair.getKey().getNumber() + "</h3>");
             if (pair.getValue().isDublicate()){
                 writer.append("<p>Ticket №" + pair.getKey().getNumber() + " is a duplicate of the Ticket №" + pair.getValue().getNumber() + "</p><br>");
                 continue;
             }
-            if (pair.getValue().getSourceName() == "-1") {
+            if (pair.getValue().getSourceName() == null) {
                 writer.append("<p>This ticket cannot be processed because the file with the error described in the ticket was changed</p><br>");
                 continue;
             }

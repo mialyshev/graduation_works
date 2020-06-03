@@ -5,10 +5,10 @@
 3. Create a jar file using the mvn package command from the downloaded repository  
 4. Create a _config.properties_ file and fill it as follows:  
     ```
-    url=https://github.com/mialyshev/webservice  
-    path=/home/mialyshev/guava  
-    projectname=guava  
-    issuespath=scan.txt  
+    url=url
+    path=path
+    projectname=projectname
+    issuespath=issuespath
    ```
     
     * url - Link to github project whose tickets you want to analyze  

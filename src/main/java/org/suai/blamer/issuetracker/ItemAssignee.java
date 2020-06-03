@@ -1,18 +1,18 @@
 package org.suai.blamer.issuetracker;
 
-public class Pair {
+public class ItemAssignee {
     private String sourceName;
     private boolean isAuthor;
     private boolean isDublicate;
     private Integer number;
 
-    public Pair(String name, boolean author) {
+    public ItemAssignee(String name, boolean author) {
         sourceName = name;
         isAuthor = author;
         isDublicate = false;
     }
 
-    public Pair(boolean dublicate, int num) {
+    public ItemAssignee(boolean dublicate, int num) {
         isDublicate = true;
         number = num;
     }

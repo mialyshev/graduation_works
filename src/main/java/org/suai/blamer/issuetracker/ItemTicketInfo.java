@@ -1,10 +1,10 @@
 package org.suai.blamer.issuetracker;
 
-public class TicketInfoPair {
+public class ItemTicketInfo {
     private Integer stringNumber;
     private Integer ticketNumber;
 
-    public TicketInfoPair(int stringNumber, int ticketNumber){
+    public ItemTicketInfo(int stringNumber, int ticketNumber){
         this.stringNumber = stringNumber;
         this.ticketNumber = ticketNumber;
     }

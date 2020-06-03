@@ -7,7 +7,7 @@ import org.suai.blamer.git.BlameInspector;
 import org.suai.blamer.git.GitException;
 import org.suai.blamer.issuetracker.GithubIssueManager;
 import org.suai.blamer.issuetracker.IssueTrackerException;
-import org.suai.blamer.output.HTMLPage;
+import org.suai.blamer.output.HtmlOut;
 import org.suai.blamer.output.Screen;
 
 import java.io.FileInputStream;
@@ -97,13 +97,13 @@ public class Main {
             }
 
             if (mode.equals("buttonreport")) {
-                HTMLPage htmlPage;
+                HtmlOut htmlOut;
                 if (htmlFilename != null) {
-                    htmlPage = new HTMLPage(githubIssueManager.getWhoAssignee(), htmlFilename, true, token);
+                    htmlOut = new HtmlOut(githubIssueManager.getWhoAssignee(), htmlFilename, true, token);
                 } else {
-                    htmlPage = new HTMLPage(githubIssueManager.getWhoAssignee(), true, token);
+                    htmlOut = new HtmlOut(githubIssueManager.getWhoAssignee(), true, token);
                 }
-                htmlPage.out();
+                htmlOut.out();
             }
         } catch (IOException | IssueTrackerException | GitException ex) {
             ex.printStackTrace();

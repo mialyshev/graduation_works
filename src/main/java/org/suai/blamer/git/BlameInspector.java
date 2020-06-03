@@ -18,8 +18,8 @@ public class BlameInspector {
     private static Logger logger = Logger.getLogger(BlameInspector.class.getName());
     private String path;
     private Map<String, String> fileInfo;
-    Git git;
-    ObjectId commitID;
+    private Git git;
+    private ObjectId commitID;
 
     public BlameInspector(String path) throws IOException {
         this.path = path;
@@ -43,7 +43,7 @@ public class BlameInspector {
         } catch (GitAPIException | NullPointerException ex) {
             throw new GitException(ex);
         } catch (ArrayIndexOutOfBoundsException e) {
-            return "-1";
+            return null;
         }
         return blamedUserName;
     }
