@@ -1,0 +1,25 @@
+
+p	java:S116	"[Rename this field "pull_requestinfo" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(’–‡¯
+o
+java:S2293"YReplace the type specification in this constructor call with the diamond operator ("<>").(ÀÌãÍ
+t
+java:S2293"YReplace the type specification in this constructor call with the diamond operator ("<>").(Ğëôİøÿÿÿÿ
+t
+java:S2293"YReplace the type specification in this constructor call with the diamond operator ("<>").(ÿ‡õÇÿÿÿÿÿ
+t
+java:S2293"YReplace the type specification in this constructor call with the diamond operator ("<>").(‹’Í’ıÿÿÿÿ
+o
+java:S2293"YReplace the type specification in this constructor call with the diamond operator ("<>").(ş™äº
+m
+java:S37763"RRefactor this method to reduce its Cognitive Complexity from 16 to the 15 allowed.(ğš££ùÿÿÿÿ
+N	java:S1064"9Replace this use of System.out or System.err by a logger.(ˆíüØ
+N	java:S1067"9Replace this use of System.out or System.err by a logger.(ÅòŸˆ
+S	java:S106:"9Replace this use of System.out or System.err by a logger.(µ³˜Äşÿÿÿÿ
+N	java:S106="9Replace this use of System.out or System.err by a logger.(ÅòŸˆ
+S	java:S106B"9Replace this use of System.out or System.err by a logger.(³šıÿÿÿÿ
+N	java:S106D"9Replace this use of System.out or System.err by a logger.(ÅòŸˆ
+S	java:S106I"9Replace this use of System.out or System.err by a logger.(¹ş„Œşÿÿÿÿ
+N	java:S106K"9Replace this use of System.out or System.err by a logger.(ÅòŸˆ
+N	java:S106P"9Replace this use of System.out or System.err by a logger.(ÌéŠ“
+N	java:S106R"9Replace this use of System.out or System.err by a logger.(ÅòŸˆ
+N	java:S106U"9Replace this use of System.out or System.err by a logger.(øœ’é

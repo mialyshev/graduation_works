@@ -1,0 +1,31 @@
+
+g
+java:S2095C"LUse try-with-resources or close this "BufferedReader" in a "finally" clause.(á⁄òÁ˚ˇˇˇˇ
+f	java:S117>"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¿¡«∏
+Z
+java:S1128"?Remove this unused import 'org.eclipse.jgit.revwalk.RevCommit'.(Ëéò∂˛ˇˇˇˇ
+_
+java:S1128"DRemove this unused import 'org.eclipse.jgit.diff.RawTextComparator'.(ñõ÷¢˘ˇˇˇˇ
+F
+java:S1128"0Remove this unused import 'java.util.ArrayList'.(˜âÓÉ
+U
+java:S1128":Remove this unused import 'org.eclipse.jgit.diff.RawText'.(§à¨€¸ˇˇˇˇ
+S	java:S106!"9Replace this use of System.out or System.err by a logger.(˝ô¯Å¯ˇˇˇˇ
+M
+java:S18543"7Remove this useless assignment to local variable "git".(‘≤öï
+P
+java:S11171":Rename "folder" which hides the field declared at line 24.(ù∏‘ 
+U
+java:S1854>"?Remove this useless assignment to local variable "DATE_FORMAT".(¿¡«∏
+ç
+java:S11309"wRemove the declaration of thrown exception 'java.lang.InterruptedException', as it cannot be thrown from method's body.(‹Ï·´
+^
+java:S3986>"HMake sure that Week Year "YYYY" is expected here instead of Year "yyyy".(¿¡«∏
+A
+java:S1075C"&Remove this hard-coded path-delimiter.(á⁄òÁ˚ˇˇˇˇ
+S	java:S106I"9Replace this use of System.out or System.err by a logger.(¿ãù¯¸ˇˇˇˇ
+S	java:S106M"9Replace this use of System.out or System.err by a logger.(û®ÿŒ˚ˇˇˇˇ
+>
+java:S14813"(Remove this unused "git" local variable.(‘≤öï
+F
+java:S1481>"0Remove this unused "DATE_FORMAT" local variable.(¿¡«∏
