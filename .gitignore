@@ -2,4 +2,5 @@
 target/
 dependency-reduced-pom.xml
 graduation_works.iml
-output.html
+*.html
+*.txt
