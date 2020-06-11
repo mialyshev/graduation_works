@@ -58,7 +58,7 @@ public class GithubIssueManager implements IIssueTracker {
     }
 
     private void setContibutors(User[] users) {
-        for (int i = 0; i < users.length; i++){
+        for (int i = 0; i < users.length; i++) {
             contibutors.add(users[i].login);
         }
     }
@@ -78,8 +78,7 @@ public class GithubIssueManager implements IIssueTracker {
         return num;
     }
 
-    public void parse(int start, int end, List<Integer> checkedIssued) throws IssueTrackerException {
-        logger.info("Start parsing");
+    public void getContributors() throws IssueTrackerException {
         try {
             logger.info("Get contributors");
             int pageNum = 1;
@@ -101,29 +100,37 @@ public class GithubIssueManager implements IIssueTracker {
 
             logger.info("Get contributors full info");
             Iterator<String> iterator = contibutors.iterator();
-            while (iterator.hasNext()){
+            while (iterator.hasNext()) {
                 contibutorURL = API_GIT + USERS + iterator.next();
                 httpcon = (HttpURLConnection) new URL(contibutorURL).openConnection();
                 httpcon.setRequestProperty(AUTHORIZATION, TOKEN + authString);
                 in = new BufferedReader(new InputStreamReader(httpcon.getInputStream()));
                 curpage = in.readLine();
                 UserFullInfo userFullInfo = gson.fromJson(curpage, UserFullInfo.class);
-                if (userFullInfo.name != null){
+                if (userFullInfo.name != null) {
                     contributorsFullInfo.put(userFullInfo.name, userFullInfo.login);
                 }
-                if (userFullInfo.email != null){
+                if (userFullInfo.email != null) {
                     contributorsFullInfo.put(userFullInfo.email, userFullInfo.login);
                 }
             }
+        } catch (IOException ex) {
+            throw new IssueTrackerException(ex);
+        }
+    }
 
-            logger.info("Start parsing issues (start :" + start + "; end : " + end + ")");
+
+    public void getTickets(int start, int end, List<Integer> checkedIssued) throws IssueTrackerException {
+        logger.info("Start parsing issues (start :" + start + "; end : " + end + ")");
+        try {
             String apiUrl = getApiUrl(false, false);
-            pageNum = 1;
+            int pageNum = 1;
             logger.info("Send request to URL : " + apiUrl + PAGE + pageNum);
-            httpcon = (HttpURLConnection) new URL(apiUrl + PAGE + pageNum).openConnection();
+            HttpURLConnection httpcon = (HttpURLConnection) new URL(apiUrl + PAGE + pageNum).openConnection();
             httpcon.setRequestProperty(AUTHORIZATION, TOKEN + authString);
-            in = new BufferedReader(new InputStreamReader(httpcon.getInputStream()));
+            BufferedReader in = new BufferedReader(new InputStreamReader(httpcon.getInputStream()));
             String issue = in.readLine();
+            Gson gson = new Gson();
             while (!issue.equals("[]")) {
                 Ticket[] tickets = gson.fromJson(issue, Ticket[].class);
                 int lastticketnum = setTickets(tickets, checkedIssued, start, end);
@@ -143,7 +150,7 @@ public class GithubIssueManager implements IIssueTracker {
         }
     }
 
-    public String getApiUrl(boolean assignee, boolean contributor) {
+    private String getApiUrl(boolean assignee, boolean contributor) {
         StringBuilder curUrl = new StringBuilder();
         curUrl.append(API_GIT + REPOS);
         int infoIndex = url.indexOf(GITHUB);
@@ -221,7 +228,7 @@ public class GithubIssueManager implements IIssueTracker {
         return false;
     }
 
-    public ArrayList<String> getStacktrace(String body) {
+    public ArrayList<String> findStacktrace(String body) {
         logger.info("Analyze body for find stacktrace");
         ArrayList<String> arrayList = new ArrayList<>();
         if (body == null) {
@@ -286,8 +293,8 @@ public class GithubIssueManager implements IIssueTracker {
     }
 
 
-    public String getSourceName(String name){
-        if (contributorsFullInfo.containsKey(name)){
+    private String getSourceName(String name) {
+        if (contributorsFullInfo.containsKey(name)) {
             return contributorsFullInfo.get(name);
         }
         return null;
@@ -303,20 +310,18 @@ public class GithubIssueManager implements IIssueTracker {
     }
 
 
-    private void addAssignee(String whoIs, Ticket ticket){
+    private void addAssignee(String whoIs, Ticket ticket) {
         if (contibutors.contains(whoIs)) {
             whoAssignee.put(ticket, new ItemAssignee(whoIs, true));
         } else {
             String sourcename = getSourceName(whoIs);
-            if (sourcename != null){
+            if (sourcename != null) {
                 if (contibutors.contains(sourcename)) {
                     whoAssignee.put(ticket, new ItemAssignee(sourcename, true));
-                }
-                else {
+                } else {
                     whoAssignee.put(ticket, new ItemAssignee(whoIs, false));
                 }
-            }
-            else {
+            } else {
                 whoAssignee.put(ticket, new ItemAssignee(whoIs, false));
             }
         }
@@ -329,8 +334,8 @@ public class GithubIssueManager implements IIssueTracker {
             while (ticketIterator.hasNext()) {
                 Ticket ticket = ticketIterator.next();
                 logger.info("Start analyze ticket with number : " + ticket.getNumber() + " to search for a trace stack in it");
-                ArrayList<String> bodyStack = getStacktrace(ticket.getBody());
-                ArrayList<String> attachStack = getStacktrace(isAttach(ticket.getBody()));
+                ArrayList<String> bodyStack = findStacktrace(ticket.getBody());
+                ArrayList<String> attachStack = findStacktrace(isAttach(ticket.getBody()));
                 StackTrace stackTrace;
                 if (bodyStack != null && !bodyStack.isEmpty()) {
                     logger.info("Start analyze stacktrace (body) in ticket with number : " + ticket.getNumber());
@@ -339,7 +344,7 @@ public class GithubIssueManager implements IIssueTracker {
                     if (stackTrace.getFrame(0) != null) {
                         String fileName = stackTrace.getFrame(0).getFileName();
                         int numString = stackTrace.getFrame(0).getNumString();
-                        if (isDuplicate(fileName, numString) == null){
+                        if (isDuplicate(fileName, numString) == null) {
                             analyzedTicket.put(fileName, new ItemTicketInfo(numString, Integer.parseInt(ticket.getNumber())));
                             String whoIs = blameInspector.blame(fileName, numString);
                             if (whoIs == null) {
@@ -347,7 +352,7 @@ public class GithubIssueManager implements IIssueTracker {
                             } else {
                                 addAssignee(whoIs, ticket);
                             }
-                        }else{
+                        } else {
                             whoAssignee.put(ticket, new ItemAssignee(true, isDuplicate(fileName, numString)));
                         }
                     }
@@ -360,7 +365,7 @@ public class GithubIssueManager implements IIssueTracker {
                     if (stackTrace.getFrame(0) != null) {
                         String fileName = stackTrace.getFrame(0).getFileName();
                         int numString = stackTrace.getFrame(0).getNumString();
-                        if (isDuplicate(fileName, numString) == null){
+                        if (isDuplicate(fileName, numString) == null) {
                             analyzedTicket.put(fileName, new ItemTicketInfo(numString, Integer.parseInt(ticket.getNumber())));
                             String whoIs = blameInspector.blame(fileName, numString);
                             if (whoIs == null) {
@@ -374,14 +379,12 @@ public class GithubIssueManager implements IIssueTracker {
                                     addAssignee(whoIs, ticket);
                                 }
                             }
-                        }else{
+                        } else {
                             whoAssignee.put(ticket, new ItemAssignee(true, isDuplicate(fileName, numString)));
                         }
                     }
                 }
             }
-        } catch (IOException ex) {
-            throw new IssueTrackerException(ex);
         } catch (GitException ex) {
             throw new GitException(ex);
         }

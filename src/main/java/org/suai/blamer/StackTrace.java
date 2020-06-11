@@ -1,6 +1,5 @@
 package org.suai.blamer;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
@@ -16,7 +15,7 @@ public class StackTrace {
         stackFrames = new ArrayList<>();
     }
 
-    public void getLines(ArrayList<String> arrayList, Map<String, String> fileInfo) throws IOException {
+    public void getLines(ArrayList<String> arrayList, Map<String, String> fileInfo) {
         logger.info("Parsing a stacktrace to glass stack frames");
         Iterator<String> iterator = arrayList.iterator();
         while (iterator.hasNext()) {

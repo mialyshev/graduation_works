@@ -1,10 +1,24 @@
 package org.suai.blamer.issuetracker;
 
 
+import org.suai.blamer.git.BlameInspector;
+import org.suai.blamer.git.GitException;
+import org.suai.blamer.issuetracker.ticket.Ticket;
+
 import java.util.List;
+import java.util.Map;
 
 public interface IIssueTracker {
-    void parse(int start, int end, List<Integer> checkedIssues) throws IssueTrackerException;
+    void getContributors() throws IssueTrackerException;
 
-    String getApiUrl(boolean assignee, boolean contibutors);
+    void getTickets(int start, int end, List<Integer> checkedIssues) throws IssueTrackerException;
+
+    List<Integer> getNumbers();
+
+    void findAssignee(BlameInspector blameInspector) throws IssueTrackerException, GitException;
+
+    void setAssignee() throws IssueTrackerException;
+
+    Map<Ticket, ItemAssignee> getWhoAssignee();
+
 }

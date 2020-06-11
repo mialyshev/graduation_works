@@ -16,7 +16,6 @@ import java.util.Iterator;
 import java.util.List;
 
 public class GithubIssueManagerTest{
-
     @Test
     public void isAttach() throws IOException, IssueTrackerException {
         String url1 = "https://api.github.com/repos/mialyshev/testRepo/issues/1";//no att
@@ -44,7 +43,7 @@ public class GithubIssueManagerTest{
     }
 
     @Test
-    public void getStacktrace() throws IOException, IssueTrackerException {
+    public void findStacktrace() throws IOException, IssueTrackerException {
         String url1 = "https://api.github.com/repos/mialyshev/testRepo/issues/2";//mes no,  att yes
         String url2 = "https://api.github.com/repos/mialyshev/testRepo/issues/1";//mes yes, att no
 
@@ -61,8 +60,8 @@ public class GithubIssueManagerTest{
             String curIssue = in.readLine();
             Gson gson = new Gson();
             Ticket ticket = gson.fromJson(curIssue, Ticket.class);
-            response.add(gitIssueManager.getStacktrace(ticket.getBody()));
-            response.add(gitIssueManager.getStacktrace(gitIssueManager.isAttach(ticket.getBody())));
+            response.add(gitIssueManager.findStacktrace(ticket.getBody()));
+            response.add(gitIssueManager.findStacktrace(gitIssueManager.isAttach(ticket.getBody())));
         }
 
         Assert.assertTrue(response.get(0) == null);
@@ -72,7 +71,7 @@ public class GithubIssueManagerTest{
     }
 
     @Test
-    public void parse() throws IOException {
+    public void getTickets() throws IOException {
         String url1 = "https://api.github.com/repos/mialyshev/testRepo/issues/1";// ass yes
         String url2 = "https://api.github.com/repos/mialyshev/testRepo/issues/2";// ass no
         String url3 = "https://api.github.com/repos/mialyshev/testRepo/issues/3";// number

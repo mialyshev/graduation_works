@@ -12,7 +12,8 @@ public class HtmlOut {
     private String outputFileName = "output.html";
     private Boolean isButtonReport = false;
     private String token;
-
+    private final String ERROR = "<p>This ticket cannot be processed because the file with the error described in the ticket was changed</p><br>";
+    private final String NOTCOLLABORATOR = "<br>Such user was not found in collaborators and cannot be appointed responsible for this issue.</p><br>";
 
     public HtmlOut(Map<Ticket, ItemAssignee> whoIs, String fileName, boolean isButton, String token) {
         ticketStringMap = whoIs;
@@ -27,7 +28,7 @@ public class HtmlOut {
         this.token = token;
     }
 
-    public void out() throws IOException {
+    public void writeReport() throws IOException {
         if (!outputFileName.contains(".html")) {
             outputFileName += ".html";
         }
@@ -39,19 +40,19 @@ public class HtmlOut {
         writer.append("<body>");
         for (Map.Entry<Ticket, ItemAssignee> pair : ticketStringMap.entrySet()) {
             writer.append("<h3>Ticket № " + pair.getKey().getNumber() + "</h3>");
-            if (pair.getValue().isDublicate()){
+            if (pair.getValue().isDublicate()) {
                 writer.append("<p>Ticket №" + pair.getKey().getNumber() + " is a duplicate of the Ticket №" + pair.getValue().getNumber() + "</p><br>");
                 continue;
             }
             if (pair.getValue().getSourceName() == null) {
-                writer.append("<p>This ticket cannot be processed because the file with the error described in the ticket was changed</p><br>");
+                writer.append(ERROR);
                 continue;
             }
             if (pair.getValue().getisAuthor() == true) {
                 writer.append("<p>Assignee to " + pair.getValue().getSourceName() + "</p><br>");
                 writer.append("<button onclick=\"setassignee('" + pair.getKey().getUrl() + "', '" + token + "', '" + pair.getValue().getSourceName() + "')\">Assignee</button>");
             } else {
-                writer.append("<p>Assignee to " + pair.getValue().getSourceName() + "<br>" + "Such user was not found in collaborators and cannot be appointed responsible for this issue." + "</p><br>");
+                writer.append("<p>Assignee to " + pair.getValue().getSourceName() + NOTCOLLABORATOR);
             }
         }
         writer.append("</body>");

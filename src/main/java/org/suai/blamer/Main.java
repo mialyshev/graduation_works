@@ -6,6 +6,7 @@ import org.suai.blamer.check.CheckedIssueException;
 import org.suai.blamer.git.BlameInspector;
 import org.suai.blamer.git.GitException;
 import org.suai.blamer.issuetracker.GithubIssueManager;
+import org.suai.blamer.issuetracker.IIssueTracker;
 import org.suai.blamer.issuetracker.IssueTrackerException;
 import org.suai.blamer.output.HtmlOut;
 import org.suai.blamer.output.Screen;
@@ -75,8 +76,9 @@ public class Main {
             List<Integer> checkedIssues = checkedIssueAnalyzer.getIssueNumbers();
 
 
-            GithubIssueManager githubIssueManager = new GithubIssueManager(url, token);
-            githubIssueManager.parse(startTicketNum, endTicketNum, checkedIssues);
+            IIssueTracker githubIssueManager = new GithubIssueManager(url, token);
+            githubIssueManager.getContributors();
+            githubIssueManager.getTickets(startTicketNum, endTicketNum, checkedIssues);
             checkedIssueAnalyzer.addNumbers(githubIssueManager.getNumbers());
 
 
@@ -88,12 +90,12 @@ public class Main {
             if (mode.equals("autoassignee")) {
                 githubIssueManager.setAssignee();
                 Screen screen = new Screen(githubIssueManager.getWhoAssignee());
-                screen.out();
+                screen.writeReport();
             }
 
             if (mode.equals("report")) {
                 Screen screen = new Screen(githubIssueManager.getWhoAssignee());
-                screen.out();
+                screen.writeReport();
             }
 
             if (mode.equals("buttonreport")) {
@@ -103,7 +105,7 @@ public class Main {
                 } else {
                     htmlOut = new HtmlOut(githubIssueManager.getWhoAssignee(), true, token);
                 }
-                htmlOut.out();
+                htmlOut.writeReport();
             }
         } catch (IOException | IssueTrackerException | GitException ex) {
             ex.printStackTrace();
